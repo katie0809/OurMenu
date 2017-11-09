@@ -1,6 +1,10 @@
 package com.example.kyungimlee.ourmenu;
 
+import android.Manifest;
 import android.annotation.SuppressLint;
+import android.content.Context;
+import android.content.Intent;
+import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -9,11 +13,17 @@ import android.graphics.Paint;
 import android.graphics.Path;
 import android.net.Uri;
 import android.os.AsyncTask;
+import android.os.Environment;
 import android.provider.DocumentsContract;
 import android.provider.MediaStore;
+import android.support.annotation.NonNull;
+import android.support.v4.app.ActivityCompat;
+import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -33,11 +43,15 @@ import com.google.api.services.vision.v1.Vision;
 import com.google.api.services.vision.v1.VisionRequest;
 import com.google.api.services.vision.v1.VisionRequestInitializer;
 import com.google.api.services.vision.v1.model.*;
+import com.soundcloud.android.crop.Crop;
 
 import java.io.ByteArrayOutputStream;
+import java.io.File;
+import java.io.FileOutputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 import static java.lang.System.out;
 
@@ -46,11 +60,15 @@ public class MenuBoardActivity extends AppCompatActivity {
     private static final String API_KEY = "AIzaSyDON76sNwTcC2AuXU2L_y31z7BtHYP74Ko";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
+    public static final int WRITE_PERMISSIONS_REQUEST = 4;
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private ImageView main_img;
     private Bitmap bitmap;
     private TextView loading_str;
+
+    List<TranslationsResource> translationsResponseList;
+    List<String> translated_txt = new ArrayList<>();
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -71,6 +89,75 @@ public class MenuBoardActivity extends AppCompatActivity {
         Uri uri = Uri.parse(struri);
 
         uploadImage(uri);
+    }
+
+    @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        getMenuInflater().inflate(R.menu.activity_menu_board, menu);
+        return super.onCreateOptionsMenu(menu);
+    }
+
+    public String getExternalPath(){
+        String sdPath = "";
+        String ext = Environment.getExternalStorageState();
+        if(ext.equals(Environment.MEDIA_MOUNTED)){
+            sdPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
+        }else{
+            sdPath = getFilesDir() + "";
+        }
+
+        return sdPath;
+    }
+
+    @Override
+    public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions, @NonNull int[] grantResults) {
+        super.onRequestPermissionsResult(requestCode, permissions, grantResults);
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        if (item.getItemId() == R.id.action_save) {
+            //Ask permission for access to external storage
+            if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
+            //Manifest.permission.WRITE_EXTERNAL_STORAGE가 접근 승낙 상태 일때
+                //Show message
+                Toast.makeText(MenuBoardActivity.this, "접근승낙", Toast.LENGTH_SHORT).show();
+
+            } else{
+            //Manifest.permission.WRITE_EXTERNAL_STORAGE가 접근 거절 상태 일때
+                ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0);
+                //Show message
+                Toast.makeText(MenuBoardActivity.this, "접근거절", Toast.LENGTH_SHORT).show();
+
+            }
+
+            //Show message
+            Toast.makeText(MenuBoardActivity.this, "파일 저장 시작", Toast.LENGTH_SHORT).show();
+
+            try {
+                ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+                byte[] imageBytes = byteArrayOutputStream.toByteArray();
+
+                //Save image
+                File file = new File(getExternalPath() + "/cropped.jpg");
+                FileOutputStream fileOutput = null;
+                fileOutput = new FileOutputStream(file);
+                fileOutput.write(imageBytes);
+                fileOutput.close();
+
+                //Show message
+                Toast.makeText(MenuBoardActivity.this, "파일 저장 성공", Toast.LENGTH_SHORT).show();
+            } catch (IOException e) {
+                //Show message
+                Toast.makeText(MenuBoardActivity.this, "파일 저장 실패", Toast.LENGTH_SHORT).show();
+
+                e.printStackTrace();
+            }
+
+            return super.onOptionsItemSelected(item);
+        }
+        return super.onOptionsItemSelected(item);
     }
 
     @SuppressLint("LongLogTag")
@@ -105,6 +192,12 @@ public class MenuBoardActivity extends AppCompatActivity {
 
                 HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
                 JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+
+                //Access Google Translation
+                Translate translate;
+                translate = new Translate.Builder(httpTransport, jsonFactory, null)
+                        .setGoogleClientRequestInitializer(new TranslateRequestInitializer(API_KEY))
+                        .setApplicationName("OurMenu").build();
 
                 //Access Google Cloud Vision
                 try {
@@ -176,9 +269,28 @@ public class MenuBoardActivity extends AppCompatActivity {
                     //Get each text element and its positions
 
                     List<GoogleCloudVisionV1AnnotateImageResponse> responses = response.getResponses();
-                    //loading_str.setText("Getting Responses");
-                    /*---------*/
-                    //Get crop hints according to the image given
+                    boolean startFlag = false;
+
+                    //Get full detected text
+                    String target_txt = responses.get(0).getTextAnnotations().get(0).getDescription();
+                    List<String> target_list = new ArrayList<>();
+                    target_list.add(target_txt);
+
+                    //Do translation for each detected text
+                    Translate.Translations.List translationreq = translate.translations().list(target_list, "ko");
+                    TranslationsListResponse translationsResponse = translationreq.execute();
+                    translationsResponseList = translationsResponse.getTranslations();
+
+                    //Get full translated text
+                    String str = translationsResponseList.get(0).getTranslatedText();
+
+                    //Split text with " "
+                    StringTokenizer st = new StringTokenizer(str, " ");
+                    translated_txt.add(st.nextToken());
+                    while(st.hasMoreTokens()){
+                        translated_txt.add(st.nextToken());
+                    }
+
                     return responses;
 
                 } catch (GoogleJsonResponseException e) {
@@ -194,6 +306,7 @@ public class MenuBoardActivity extends AppCompatActivity {
             protected void onPostExecute(List<GoogleCloudVisionV1AnnotateImageResponse> result){
                 loading_str.setText("OCR finished");
                 boolean startFlag = false;
+                int idx = 0;
 
                 //drawing text
                 Canvas canvas = new Canvas(bitmap);
@@ -206,6 +319,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                 pen.setStrokeCap(Paint.Cap.BUTT);
                 pen.setStrokeJoin(Paint.Join.MITER);
 
+
                 for (GoogleCloudVisionV1AnnotateImageResponse res : result) {
 
                     // For full list of available annotations, see http://g.co/cloud/vision/docs
@@ -214,12 +328,30 @@ public class MenuBoardActivity extends AppCompatActivity {
                             startFlag = true;
                             continue;
                         }
-                        String str = annotation.getDescription();
+                        if(idx >= translated_txt.size()) idx--;
+                        String str = translated_txt.get(idx);
+
+                        /*
+                        List<String> target_list = new ArrayList<>();
+                        target_list.add(annotation.getDescription());
+
+                        //Do translation for each detected text
+                        try {
+                            Translate.Translations.List translationreq = translate.translations().list(target_list, "ko");
+                            TranslationsListResponse translationsResponse = translationreq.execute();
+                            translationsResponseList = translationsResponse.getTranslations();
+                        } catch (IOException e) {
+                            e.printStackTrace();
+                        }
+
+
+                        //Get full translated text
+                        String str = translationsResponseList.get(0).getTranslatedText();*/
                         List<GoogleCloudVisionV1Vertex> vertex = annotation.getBoundingPoly().getVertices();
                         pen.setTextSize((int)getTextSize(vertex) + 5);
                         out.printf("Text: %s\nPosition : ", str);
                         canvas.drawTextOnPath(str, getPath(vertex),0,0, pen);
-
+                        idx++;
                     }
                 }
             }

@@ -1,6 +1,9 @@
 <resources>
     <string name="app_name">OurMenu</string>
 
+    <string name="action_select">Pick</string>
+    <string name="action_save">Save</string>
+
     <string name="dialog_select_prompt">Choose a picture</string>
     <string name="dialog_select_camera">Camera</string>
     <string name="dialog_select_gallery">Gallery</string>

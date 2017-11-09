@@ -49,6 +49,7 @@ import com.google.api.services.vision.v1.model.GoogleCloudVisionV1BatchAnnotateI
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1EntityAnnotation;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Feature;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Image;
+import com.soundcloud.android.crop.Crop;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -70,6 +71,7 @@ public class MainActivity extends AppCompatActivity {
     private static final int GALLERY_IMAGE_REQUEST = 1;
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
+    public static final int WRITE_PERMISSIONS_REQUEST = 4;
 
     private TextView mImageDetails;
     private ImageView mMainImage;
@@ -269,6 +271,9 @@ public class MainActivity extends AppCompatActivity {
 
     public void showImage(Uri uri){
         Intent i = new Intent(this, MenuBoardActivity.class);
+
+        Intent crop = new Intent(this, CroppingActivity.class);
+
         String struri = uri.toString();
         i.putExtra("imageUri", struri);
 
@@ -276,7 +281,9 @@ public class MainActivity extends AppCompatActivity {
             choice = "Korean";
 
         i.putExtra("langChoice", choice);
-        startActivity(i);
+
+        crop.putExtra("imageUri", struri);
+        startActivity(crop);
     }
 
 }
