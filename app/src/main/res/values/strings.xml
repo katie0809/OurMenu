@@ -1,5 +1,8 @@
 <resources>
     <string name="app_name">OurMenu</string>
+    <string name="start_button">Start</string>
+    <string name="checkbox">Do not show language chooser again</string>
+    <string name="checkbox_explain">You could change laguage setting on Setting menu</string>
 
     <string name="action_select">Pick</string>
     <string name="action_save">Save</string>

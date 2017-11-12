@@ -8,6 +8,7 @@ import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
 import android.os.Bundle;
+import android.os.Environment;
 import android.provider.MediaStore;
 import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
@@ -17,8 +18,13 @@ import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileNotFoundException;
+import java.io.FileOutputStream;
 import java.io.IOException;
+
+import static com.example.kyungimlee.ourmenu.MenuBoardActivity.getDate;
 
 public class CroppingActivity extends AppCompatActivity {
 
@@ -95,25 +101,57 @@ public class CroppingActivity extends AppCompatActivity {
 
     private void beginCrop(Uri source) {
         Uri destination = Uri.fromFile(new File(getCacheDir(), "cropped"));
-        Crop.of(source, destination).asSquare().start(this);
+        Crop.of(source, destination).withMaxSize(bitmap.getWidth(), bitmap.getHeight()).start(this);
     }
 
     private void handleCrop(int resultCode, Intent result) {
         if (resultCode == RESULT_OK) {
             //result_view.setImageURI(Crop.getOutput(result));
+            //save cropped image
+            /*
+            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+            byte[] imageBytes = byteArrayOutputStream.toByteArray();
+
+            //Save image
+            String date = getDate();
+            File file = new File(getExternalPath()+"/OurMenu/res/pictures/cropped_" + date + ".jpg");
+            FileOutputStream fileOutput = null;
+            try {
+                fileOutput = new FileOutputStream(file);
+                fileOutput.write(imageBytes);
+                fileOutput.close();
+            } catch (FileNotFoundException e) {
+                e.printStackTrace();
+            } catch (IOException e) {
+                e.printStackTrace();
+            }*/
+
             //Start menuboard activity
             Intent i = new Intent(this, MenuBoardActivity.class);
 
             String struri = Crop.getOutput(result).toString();
 
             i.putExtra("imageUri", struri);
-            i.putExtra("langChoice", "Korean");
+            i.putExtra("header", 0);
 
             startActivity(i);
 
         } else if (resultCode == Crop.RESULT_ERROR) {
             Toast.makeText(this, Crop.getError(result).getMessage(), Toast.LENGTH_SHORT).show();
         }
+    }
+
+    public String getExternalPath(){
+        String sdPath = "";
+        String ext = Environment.getExternalStorageState();
+        if(ext.equals(Environment.MEDIA_MOUNTED)){
+            sdPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
+        }else{
+            sdPath = getFilesDir() + "";
+        }
+
+        return sdPath;
     }
 
 }

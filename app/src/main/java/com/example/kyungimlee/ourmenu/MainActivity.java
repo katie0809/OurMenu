@@ -53,6 +53,7 @@ import com.soundcloud.android.crop.Crop;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
+import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
@@ -71,12 +72,13 @@ public class MainActivity extends AppCompatActivity {
     private static final int GALLERY_IMAGE_REQUEST = 1;
     public static final int CAMERA_PERMISSIONS_REQUEST = 2;
     public static final int CAMERA_IMAGE_REQUEST = 3;
-    public static final int WRITE_PERMISSIONS_REQUEST = 4;
+    public static final int SAVED_MENU_REQUEST = 4;
 
     private TextView mImageDetails;
     private ImageView mMainImage;
     private Button camera_btn;
     private Button gallary_btn;
+    private Button saved_btn;
     private Spinner select_language;
 
     // 코드상에서 사용된 변수
@@ -96,6 +98,7 @@ public class MainActivity extends AppCompatActivity {
 
         camera_btn = (Button) findViewById(R.id.camera_btn);
         gallary_btn = (Button) findViewById(R.id.gallary_btn);
+        saved_btn = (Button) findViewById(R.id.saved_btn);
         select_language = (Spinner) findViewById(R.id.lang_list);
 
         camera_btn.setOnClickListener(new View.OnClickListener() {
@@ -104,110 +107,65 @@ public class MainActivity extends AppCompatActivity {
                 startCamera();
             }
         });
-
         gallary_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
                 startGalleryChooser();
             }
         });
-
-        // 드롭다운 메뉴의 기본값은 Select Language
-        items = new ArrayList<String>();
-        items.add("Select Language");
-
-        // 구글에서 처리할 수 있는 언어 리스트 받는 스레드 처리
-        // 해시맵에 <언어명,언어코드>로 저장
-        // 드롭다운 메뉴에 띄울 배열리스트에 언어명 전부 저장
-        menu_handler = new Handler(){
+        saved_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void handleMessage(Message msg) {
-                super.handleMessage(msg);
-
-                // 메시지를 받아온다
-                Bundle bun = msg.getData();
-                String language_name = bun.getString("name");
-                String language_code = bun.getString("code");
-
-                // 해시맵에 제공되는 언어명과 언어 코드 쌍을 모두 집어넣고
-                // ArrayList에 언어명을 모두 넣는다. 이 ArrayList는 spinner의 드롭다운 메뉴를
-                // 만드는 데 사용됨
-                supported_lang.put(language_name, language_code);
-                items.add(language_name);
-            }
-        };
-
-        // 언어명 저장된 배열리스트와 GUI 컴포넌트 spinner 연결해준다
-        ArrayAdapter<String> adapter = new ArrayAdapter<String>(
-                this, android.R.layout.simple_spinner_item, items
-        );
-        adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
-        select_language.setAdapter(adapter);
-
-        // 사용자가 번역 원하는 언어 택한경우
-        select_language.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
-
-                // 선택된 메뉴아이템을 Toast메시지로 띄운다
-                Toast.makeText(MainActivity.this,"Selected Language : "+select_language.getItemAtPosition(position),Toast.LENGTH_SHORT).show();
-                choice = (String)select_language.getSelectedItem().toString();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
+            public void onClick(View view) {
+                startSavedMenuGallery();
             }
         });
 
+        //check if an user already made fixed language choice
+        File fixed = new File(getExternalPath()+"/OurMenu/setting/languageFixed.txt");
+        if(!fixed.exists()){
+            //Show loading page
+            startActivity(new Intent(this, LoadingActivity.class));
+        }
+
     }
 
+    private void isLanguageChosen(){
+        //check if an user made language choice
+        File langFile = new File(getExternalPath()+"/OurMenu/setting/languageChoice.txt");
+        if(langFile.exists()){
+            byte[] buffer = readFile(langFile);
+            choice = buffer.toString();
+        }else{
+            //if user didn's select the language
+            //Show message
+            Toast.makeText(MainActivity.this, "No lanugage chose. Use korean as a default language", Toast.LENGTH_SHORT).show();
+            choice = "Korean";
+        }
+        return;
+    }
 
-    private void callTranslation() throws IOException{
-        //Do the work in an async task
-        new AsyncTask<Object, Void, List<TranslationsResource> >() {
-            @Override
-            protected List<TranslationsResource> doInBackground(Object... objects) {
-
-
-                HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
-                JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-
-                //Translate translate = builder.build();
-                Translate translate;
-                translate = new Translate.Builder(httpTransport, jsonFactory, null)
-                        .setGoogleClientRequestInitializer(new TranslateRequestInitializer(CLOUD_TRANSLATION_API_KEY))
-                        .setApplicationName("Intent").build();
-
-                try {
-                    List<String> list = new ArrayList<>();
-                    list.add("hello world");
-                    Translate.Languages.List req = translate.languages().list();
-                    LanguagesListResponse resp = req.execute();
-                    List<LanguagesResource> lang = resp.getLanguages();
-                    System.out.print(lang);
-                    for(LanguagesResource l : lang){
-                        System.out.print(l.getName());
-                        System.out.print(l.getLanguage()+"\n");
-                    }
-                    Translate.Translations.List request = translate.translations().list(list, "ko");
-                    TranslationsListResponse tlr = request.execute();
-                    List<TranslationsResource> res = tlr.getTranslations();
-                    for(TranslationsResource r : res){
-                        System.out.print(r.getDetectedSourceLanguage());
-                        System.out.print(r.getTranslatedText());
-                    }
-                    return res;
-
-                } catch (IOException e) {
-                    e.printStackTrace();
+    /**
+     * 파일 읽어 오기
+     * @param file
+     */
+    private byte[] readFile(File file){
+        int readcount=0;
+        if(file!=null&&file.exists()){
+            try {
+                FileInputStream fis = new FileInputStream(file);
+                readcount = (int)file.length();
+                byte[] buffer = new byte[readcount];
+                fis.read(buffer);
+                for(int i=0 ; i<file.length();i++){
+                    Log.d(TAG, ""+buffer[i]);
                 }
-                return null;
+                fis.close();
+                return buffer;
+            } catch (Exception e) {
+                e.printStackTrace();
             }
-
-            protected void onPostExecute(List<TranslationsResource> result){
-                System.out.print("please\n");
-            }
-        }.execute();
+        }
+        return null;
     }
 
     public void startCamera() {
@@ -234,6 +192,33 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    private void startSavedMenuGallery() {
+        //start saved menu gallery
+        /*
+        if (PermissionUtils.requestPermission(this, GALLERY_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE)) {
+            Intent intent = new Intent();
+            File filePath = new File(getExternalPath() + "/OurMenu/res/pictures/");
+            Uri photoUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", filePath);
+
+            //intent.setType("image/*");
+            intent.setAction(Intent.ACTION_GET_CONTENT);
+            intent.setDataAndType(photoUri, "image/*");
+            startActivityForResult(Intent.createChooser(intent, "Select a photo"),
+                    GALLERY_IMAGE_REQUEST);
+        }
+
+        Uri targetUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
+        String targetDir = getExternalPath() + "/OurMenu/res/pictures/";
+        targetUri = targetUri.buildUpon().appendQueryParameter("bucketId", String.valueOf(targetDir.toLowerCase().hashCode())).build();
+        Intent intent = new Intent(Intent.ACTION_VIEW, targetUri);
+        startActivity(intent);
+        */
+        Intent intent = new Intent(this, GallaryActivity.class);
+        startActivity(intent);
+
+    }
+
+
     public File getCameraFile() {
         File dir = getExternalFilesDir(Environment.DIRECTORY_PICTURES);
         return new File(dir, FILE_NAME);
@@ -257,6 +242,8 @@ public class MainActivity extends AppCompatActivity {
         }
     }
 
+    //After finishing gallary chooser of camera, get the photo uri and show it using cropping activity
+    //First, deliver the uri to method showImage()
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent data) {
         super.onActivityResult(requestCode, resultCode, data);
@@ -266,24 +253,39 @@ public class MainActivity extends AppCompatActivity {
         } else if (requestCode == CAMERA_IMAGE_REQUEST && resultCode == RESULT_OK) {
             Uri photoUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", getCameraFile());
             showImage(photoUri);
+        } else if (requestCode == SAVED_MENU_REQUEST && requestCode == RESULT_OK && data != null){
+            //Start menuboard activity
+            Intent i = new Intent(this, MenuBoardActivity.class);
+
+            String struri = data.getData().toString();
+
+            i.putExtra("imageUri", struri);
+            i.putExtra("header", 1);
+
+            startActivity(i);
         }
     }
 
+    //Using delivered uri, start Cropping activity
     public void showImage(Uri uri){
-        Intent i = new Intent(this, MenuBoardActivity.class);
-
         Intent crop = new Intent(this, CroppingActivity.class);
-
         String struri = uri.toString();
-        i.putExtra("imageUri", struri);
 
-        if(select_language.getSelectedItem()==null)
-            choice = "Korean";
-
-        i.putExtra("langChoice", choice);
-
+        isLanguageChosen();
         crop.putExtra("imageUri", struri);
         startActivity(crop);
+    }
+
+    public String getExternalPath(){
+        String sdPath = "";
+        String ext = Environment.getExternalStorageState();
+        if(ext.equals(Environment.MEDIA_MOUNTED)){
+            sdPath = Environment.getExternalStorageDirectory().getAbsolutePath() + "/";
+        }else{
+            sdPath = getFilesDir() + "";
+        }
+
+        return sdPath;
     }
 
 }

@@ -37,10 +37,23 @@
                 android:id="@+id/camera_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_alignParentBottom="true"
-                android:layout_centerHorizontal="true"
-                android:layout_marginBottom="78dp"
+                android:layout_above="@+id/saved_btn"
+                android:layout_marginBottom="11dp"
+                android:layout_marginStart="32dp"
+                android:layout_toEndOf="@+id/gallary_btn"
                 android:text="Camera"
+                tools:layout_editor_absoluteX="148dp"
+                tools:layout_editor_absoluteY="185dp" />
+
+            <Button
+                android:id="@+id/setting_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignParentBottom="true"
+                android:layout_alignParentStart="true"
+                android:layout_marginBottom="89dp"
+                android:layout_marginStart="91dp"
+                android:text="Setting"
                 tools:layout_editor_absoluteX="148dp"
                 tools:layout_editor_absoluteY="185dp" />
 
@@ -48,10 +61,21 @@
                 android:id="@+id/gallary_btn"
                 android:layout_width="wrap_content"
                 android:layout_height="wrap_content"
-                android:layout_above="@+id/camera_btn"
-                android:layout_alignStart="@+id/camera_btn"
-                android:layout_marginBottom="26dp"
+                android:layout_alignBaseline="@+id/camera_btn"
+                android:layout_alignBottom="@+id/camera_btn"
+                android:layout_alignStart="@+id/setting_btn"
                 android:text="Gallary"
+                tools:layout_editor_absoluteX="148dp"
+                tools:layout_editor_absoluteY="256dp" />
+
+            <Button
+                android:id="@+id/saved_btn"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:layout_alignBaseline="@+id/setting_btn"
+                android:layout_alignBottom="@+id/setting_btn"
+                android:layout_alignEnd="@+id/camera_btn"
+                android:text="Saved Menu"
                 tools:layout_editor_absoluteX="148dp"
                 tools:layout_editor_absoluteY="256dp" />
 
