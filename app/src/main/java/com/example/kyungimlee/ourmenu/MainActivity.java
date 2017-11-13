@@ -134,7 +134,8 @@ public class MainActivity extends AppCompatActivity {
         File langFile = new File(getExternalPath()+"/OurMenu/setting/languageChoice.txt");
         if(langFile.exists()){
             byte[] buffer = readFile(langFile);
-            choice = buffer.toString();
+            choice = new String(buffer);
+            Toast.makeText(MainActivity.this, choice, Toast.LENGTH_SHORT).show();
         }else{
             //if user didn's select the language
             //Show message
@@ -271,7 +272,6 @@ public class MainActivity extends AppCompatActivity {
         Intent crop = new Intent(this, CroppingActivity.class);
         String struri = uri.toString();
 
-        isLanguageChosen();
         crop.putExtra("imageUri", struri);
         startActivity(crop);
     }

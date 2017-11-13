@@ -56,6 +56,7 @@ import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Page;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Paragraph;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Symbol;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1TextAnnotation;
+import com.google.api.services.vision.v1.model.GoogleCloudVisionV1TextAnnotationDetectedBreak;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Vertex;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Word;
 import com.snatik.polygon.Point;
@@ -83,6 +84,13 @@ public class MenuBoardActivity extends AppCompatActivity {
     public static final int WRITE_PERMISSIONS_REQUEST = 4;
     private static final int FROM_CROPPING = 0;
     private static final int FROM_SAVED = 1;
+
+    //detected break type
+    private static String DETECTED_BREAK;
+    private static final String SPACE = "SPACE";
+    private static final String SURE_SPACE = "SURE_SPACE";
+    private static final String EOL_SURE_SPACE = "EOL_SURE_SPACE";
+    private static final String LINE_BREAK = "LINE_BREAK";
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private String choice = "";
@@ -124,6 +132,16 @@ public class MenuBoardActivity extends AppCompatActivity {
                 uploadImage(uri);
                 break;
             case FROM_SAVED:
+                //read file
+
+                //get annotation or whatever else parameter
+
+                //resize the image, attach image to bitmap parameter
+
+                //attach bitmap to main view
+
+                //draw translation or boundaries using annotation file
+
                 break;
         }
 
@@ -194,6 +212,7 @@ public class MenuBoardActivity extends AppCompatActivity {
         File langFile = new File(getExternalPath()+"/OurMenu/setting/languageChoice.txt");
         if(langFile.exists()){
             byte[] buffer = readFile(langFile);
+            choice = new String(buffer);
         }else{
             //if user didn's select the language
             //Show message
@@ -531,7 +550,253 @@ public class MenuBoardActivity extends AppCompatActivity {
 
 
     }
+    private void callParaRectCloudVision(final Bitmap bitmap) throws IOException{
+        loading_str.setText("uploading image");
+        //Do the work in an async task
+        new AsyncTask<Object, Void, List<GoogleCloudVisionV1AnnotateImageResponse> >(){
+            @Override
+            protected List<GoogleCloudVisionV1AnnotateImageResponse> doInBackground(Object... objects) {
 
+                HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+                JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+
+                //Access Google Translation
+                Translate translate;
+                translate = new Translate.Builder(httpTransport, jsonFactory, null)
+                        .setGoogleClientRequestInitializer(new TranslateRequestInitializer(API_KEY))
+                        .setApplicationName("OurMenu").build();
+
+                //Access Google Cloud Vision
+                try {
+                    VisionRequestInitializer requestInitializer =
+                            new VisionRequestInitializer(API_KEY) {
+                                /**
+                                 * We override this so we can inject important identifying fields into the HTTP
+                                 * headers. This enables use of a restricted cloud platform API key.
+                                 */
+                                @Override
+                                protected void initializeVisionRequest(VisionRequest<?> visionRequest)
+                                        throws IOException {
+                                    super.initializeVisionRequest(visionRequest);
+
+                                    String packageName = getPackageName();
+                                    visionRequest.getRequestHeaders().set(ANDROID_PACKAGE_HEADER, packageName);
+
+                                    String sig = PackageManagerUtils.getSignature(getPackageManager(), packageName);
+
+                                    visionRequest.getRequestHeaders().set(ANDROID_CERT_HEADER, sig);
+                                }
+                            };
+
+                    Vision.Builder builder = new Vision.Builder(httpTransport, jsonFactory, null);
+                    builder.setVisionRequestInitializer(requestInitializer);
+
+                    Vision vision = builder.build();
+
+                    GoogleCloudVisionV1BatchAnnotateImagesRequest batchAnnotateImagesRequest =
+                            new GoogleCloudVisionV1BatchAnnotateImagesRequest();
+
+                    batchAnnotateImagesRequest.setRequests(new ArrayList<GoogleCloudVisionV1AnnotateImageRequest>() {{
+                        GoogleCloudVisionV1AnnotateImageRequest annotateImageRequest = new GoogleCloudVisionV1AnnotateImageRequest();
+
+                        // Add the image
+                        GoogleCloudVisionV1Image base64EncodedImage = new GoogleCloudVisionV1Image();
+                        // Convert the bitmap to a JPEG
+                        // Just in case it's a format that Android understands but Cloud Vision
+                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
+                        byte[] imageBytes = byteArrayOutputStream.toByteArray();
+
+                        // Base64 encode the JPEG
+                        base64EncodedImage.encodeContent(imageBytes);
+                        annotateImageRequest.setImage(base64EncodedImage);
+
+                        // add the features we want
+                        annotateImageRequest.setFeatures(new ArrayList<GoogleCloudVisionV1Feature>() {{
+                            GoogleCloudVisionV1Feature textDetection = new GoogleCloudVisionV1Feature();
+                            textDetection.setType("DOCUMENT_TEXT_DETECTION");
+                            add(textDetection);
+                        }});
+
+                        // Add the list of one thing to the request
+                        add(annotateImageRequest);
+                    }});
+
+                    Vision.Images.Annotate annotateRequest =
+                            vision.images().annotate(batchAnnotateImagesRequest);
+                    // Due to a bug: requests to Vision API containing large images fail when GZipped.
+                    annotateRequest.setDisableGZipContent(true);
+                    Log.d(TAG, "created Cloud Vision request object, sending request");
+
+                    GoogleCloudVisionV1BatchAnnotateImagesResponse response = annotateRequest.execute();
+                    List<GoogleCloudVisionV1AnnotateImageResponse> responses = response.getResponses();
+
+                    boolean startFlag = false;
+
+                    Canvas canvas = new Canvas(bitmap);
+                    canvas.drawARGB(175,0,0,0);
+                    Paint pen = new Paint();
+                    pen.setStyle(Paint.Style.STROKE);
+                    pen.setStrokeWidth(3);
+                    //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
+                    pen.setColor(Color.YELLOW);
+                    pen.setStrokeCap(Paint.Cap.BUTT);
+                    pen.setStrokeJoin(Paint.Join.MITER);
+                    List<String> target_list = new ArrayList<>();
+                    List<TranslationsResource> translationsResponseList = new ArrayList<>();
+                    List<List<GoogleCloudVisionV1Vertex> > vertex = new ArrayList<List<GoogleCloudVisionV1Vertex>>();
+                    boolean start = false;
+/*
+                    for(GoogleCloudVisionV1AnnotateImageResponse res : responses){
+                        for(GoogleCloudVisionV1EntityAnnotation entitiy : res.getTextAnnotations()){
+                            if(!start){
+                                start = true;
+                                continue;
+                            }
+                            target_list.add(entitiy.getDescription());
+                            vertex.add(entitiy.getBoundingPoly().getVertices());
+                        }
+                    }
+*/
+                    for(GoogleCloudVisionV1AnnotateImageResponse res : responses){
+                        for(GoogleCloudVisionV1Page page : res.getFullTextAnnotation().getPages()){
+                            for(GoogleCloudVisionV1Block block : page.getBlocks()){
+                                for(GoogleCloudVisionV1Paragraph paragraph : block.getParagraphs()){
+                                    vertex.add(paragraph.getBoundingBox().getVertices());
+                                    String parastr = "";
+                                    for(GoogleCloudVisionV1Word word : paragraph.getWords()){
+                                        String wordstr = "";
+                                        for(GoogleCloudVisionV1Symbol symbol : word.getSymbols()){
+                                            wordstr += symbol.getText();
+                                            if(symbol.getProperty().getDetectedBreak() != null){
+                                                DETECTED_BREAK = symbol.getProperty().getDetectedBreak().getType();
+                                                System.out.printf("word %s break %s\n", wordstr, symbol.getProperty().getDetectedBreak().getType());
+                                                switch (DETECTED_BREAK){
+                                                    case SPACE:
+                                                        wordstr += " ";
+                                                        break;
+                                                    case SURE_SPACE:
+                                                        wordstr += "        ";
+                                                        break;
+                                                    case LINE_BREAK:
+                                                        wordstr += " \n ";
+                                                        break;
+                                                    case EOL_SURE_SPACE:
+                                                        wordstr += " \n ";
+                                                        break;
+                                                }
+                                            }
+                                        }
+                                        parastr += wordstr;
+                                    }
+                                    target_list.add(parastr);
+                                }
+                            }
+                        }
+                    }
+
+                    //execute translation for a paragraph
+                    try {
+                        Translate.Translations.List translationreq = translate.translations().list(target_list, choice);
+                        TranslationsListResponse translationsResponse = translationreq.execute();
+                        translationsResponseList = translationsResponse.getTranslations();
+                    } catch (IOException e) {
+                        e.printStackTrace();
+                    }int idx = 0;
+                    for(TranslationsResource ress : translationsResponseList){
+                        out.printf("Translated : %s\n", ress.getTranslatedText());
+
+                        //get vertices of translated text
+                        List<GoogleCloudVisionV1Vertex> vertices = vertex.get(idx);
+                        pen.setTextSize((float) 40);
+                        //pen.setTextSize((int)_getTextSize(vertices, ress.getTranslatedText()));
+/*
+                        //Using multiline drawing
+                        pen.setTextSize((float) 40);
+                        String paragraph = ress.getTranslatedText();
+                        int x= vertices.get(0).getX();
+                        int y= vertices.get(0).getY();
+                        for(String line : paragraph.split("\n")){
+                            canvas.drawText(line, x, y, pen);
+                            y += pen.ascent() + pen.descent();
+                        }
+
+*/
+                        //Using Static Layout
+                        //Draw translation in the bounding box
+                        RectF rect = new RectF(vertices.get(0).getX().floatValue(),
+                                vertices.get(0).getY().floatValue(),
+                                vertices.get(2).getX().floatValue(),
+                                vertices.get(2).getY().floatValue());
+
+
+                        StaticLayout sl = new StaticLayout(ress.getTranslatedText(), new TextPaint(pen), (int)rect.width(), Layout.Alignment.ALIGN_NORMAL, 1, 1, false);
+
+                        canvas.save();
+                        canvas.translate(rect.left, rect.top);
+                        sl.draw(canvas);
+                        canvas.restore();
+
+                        //canvas.drawTextOnPath(translationsResponseList.get(idx).getTranslatedText(), getPath(vertices),0,0, pen);
+                        idx++;
+                    }
+
+
+                    return responses;
+
+                } catch (GoogleJsonResponseException e) {
+                    Log.d(TAG, "failed to make API request because " + e.getContent());
+                } catch (IOException e) {
+                    Log.d(TAG, "failed to make API request because of other IOException " +
+                            e.getMessage());
+                }
+
+                return null;
+
+            }
+            protected void onPostExecute(List<GoogleCloudVisionV1AnnotateImageResponse> result){
+                loading_str.setText("OCR finished");
+                boolean startFlag = false;
+                int idx = 0;
+/*
+                //drawing text
+                Canvas canvas = new Canvas(bitmap);
+                canvas.drawARGB(175,0,0,0);
+                Paint pen = new Paint();
+                pen.setStyle(Paint.Style.STROKE);
+                pen.setStrokeWidth(3);
+                //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
+                pen.setColor(Color.YELLOW);
+                pen.setStrokeCap(Paint.Cap.BUTT);
+                pen.setStrokeJoin(Paint.Join.MITER);
+
+
+                for (GoogleCloudVisionV1AnnotateImageResponse res : result) {
+
+                    // For full list of available annotations, see http://g.co/cloud/vision/docs
+                    for (GoogleCloudVisionV1EntityAnnotation annotation : res.getTextAnnotations()) {
+                        if(!startFlag){
+                            startFlag = true;
+                            continue;
+                        }
+                        if(idx >= translated_txt.size()) idx--;
+                        String str = translated_txt.get(idx);
+
+
+                        List<String> target_list = new ArrayList<>();
+                        target_list.add(annotation.getDescription());
+
+                        //Get full translated text
+                        List<GoogleCloudVisionV1Vertex> vertex = annotation.getBoundingPoly().getVertices();
+                        pen.setTextSize((int)getTextSize(vertex) + 5);
+                        out.printf("Text: %s\nPosition : ", annotation.getDescription());
+                        canvas.drawTextOnPath(str, getPath(vertex),0,0, pen);
+                        idx++;
+                    }
+                }*/
+            }
+        }.execute();
+    }
     private void callBackupCloudVision(final Bitmap bitmap) throws IOException{
         loading_str.setText("uploading image");
         //Do the work in an async task
@@ -741,7 +1006,7 @@ public class MenuBoardActivity extends AppCompatActivity {
 
                     //execute translation for a word
                     try {
-                        Translate.Translations.List translationreq = translate.translations().list(target_list, "ko");
+                        Translate.Translations.List translationreq = translate.translations().list(target_list, choice);
                         TranslationsListResponse translationsResponse = translationreq.execute();
                         translationsResponseList = translationsResponse.getTranslations();
                     } catch (IOException e) {
@@ -1294,6 +1559,21 @@ public class MenuBoardActivity extends AppCompatActivity {
         return result;
     }
     private double getTextSize(List<GoogleCloudVisionV1Vertex> bound) {
+        int x1=0, x2=0, y1=0, y2=0;
+        double size=0;
+
+        x1 = bound.get(0).getX();
+        x2 = bound.get(3).getX();
+        y1 = bound.get(0).getY();
+        y2 = bound.get(3).getY();
+
+        size = Math.sqrt(((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)));
+
+        return size;
+    }
+
+    //revised version of calculating text size
+    private double _getTextSize(List<GoogleCloudVisionV1Vertex> bound, String translatedText) {
         int x1=0, x2=0, y1=0, y2=0;
         double size=0;
 
