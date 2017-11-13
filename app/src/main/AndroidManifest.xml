@@ -38,7 +38,8 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <activity android:name=".GallaryActivity"></activity>
+        <activity android:name=".GallaryActivity" />
+        <activity android:name=".ResultActivity"></activity>
     </application>
 
 </manifest>

@@ -3,6 +3,7 @@ package com.example.kyungimlee.ourmenu;
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Context;
+import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
@@ -28,6 +29,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
+import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -160,7 +162,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                     yPos = (int)motionEvent.getY();
                     String str = String.valueOf(xPos);
                     String strr = String.valueOf(yPos);
-
+/*
                     //calculate paragraph boundary that the point is included
                     if(paraVertices != null && wordVertices != null){
                         int[] x = new int[4];
@@ -197,6 +199,13 @@ public class MenuBoardActivity extends AppCompatActivity {
                             }
                         }
                     }
+*/
+                    //Search for Beef Stew
+                    Intent myIntent = new Intent(MenuBoardActivity.this, ResultActivity.class);
+
+                    myIntent.putExtra("inputText", "beef stew");
+                    myIntent.putExtra("selectedLang", "English");
+                    startActivity(myIntent);
 
                     Toast.makeText(MenuBoardActivity.this, "xPos: " + str + " yPos: " + strr, Toast.LENGTH_SHORT).show();
                     return true;
@@ -1559,21 +1568,6 @@ public class MenuBoardActivity extends AppCompatActivity {
         return result;
     }
     private double getTextSize(List<GoogleCloudVisionV1Vertex> bound) {
-        int x1=0, x2=0, y1=0, y2=0;
-        double size=0;
-
-        x1 = bound.get(0).getX();
-        x2 = bound.get(3).getX();
-        y1 = bound.get(0).getY();
-        y2 = bound.get(3).getY();
-
-        size = Math.sqrt(((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)));
-
-        return size;
-    }
-
-    //revised version of calculating text size
-    private double _getTextSize(List<GoogleCloudVisionV1Vertex> bound, String translatedText) {
         int x1=0, x2=0, y1=0, y2=0;
         double size=0;
 
