@@ -2,10 +2,10 @@ package com.example.kyungimlee.ourmenu;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
-import android.content.Context;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.graphics.Bitmap;
+import android.graphics.BitmapFactory;
 import android.graphics.Canvas;
 import android.graphics.Color;
 import android.graphics.Paint;
@@ -16,7 +16,6 @@ import android.os.AsyncTask;
 import android.os.Bundle;
 import android.os.Environment;
 import android.provider.MediaStore;
-import android.support.annotation.NonNull;
 import android.support.v4.app.ActivityCompat;
 import android.support.v4.content.ContextCompat;
 import android.support.v7.app.AppCompatActivity;
@@ -29,7 +28,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.widget.ImageView;
-import android.widget.RadioButton;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -58,7 +56,6 @@ import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Page;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Paragraph;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Symbol;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1TextAnnotation;
-import com.google.api.services.vision.v1.model.GoogleCloudVisionV1TextAnnotationDetectedBreak;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Vertex;
 import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Word;
 import com.snatik.polygon.Point;
@@ -73,7 +70,11 @@ import java.io.IOException;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.Iterator;
 import java.util.List;
+import java.util.Map;
+import java.util.Set;
 
 import static com.google.common.primitives.Ints.max;
 import static java.lang.System.out;
@@ -96,9 +97,13 @@ public class MenuBoardActivity extends AppCompatActivity {
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private String choice = "";
+    private String detected_lang = "";
     private ImageView main_view;
-    protected Bitmap bitmap;
+    private Bitmap original_bitmap;
+    private Bitmap boundary_bitmap;
+    protected Bitmap cur_bitmap;
     private TextView loading_str;
+    protected Canvas bit_canvas;
 
     private List<String> target_txt = new ArrayList<>();
     private List<TranslationsResource> translated_txt = new ArrayList<>();
@@ -106,6 +111,11 @@ public class MenuBoardActivity extends AppCompatActivity {
     private List<List<GoogleCloudVisionV1Vertex> > wordVertices = new ArrayList<List<GoogleCloudVisionV1Vertex> >(); // Set of vertices of paragraph
     protected List<GoogleCloudVisionV1Vertex> curVertex = new ArrayList<>();
     protected List<GoogleCloudVisionV1AnnotateImageResponse> annotationList = new ArrayList<>();
+    protected List<Point> points = new ArrayList<>();
+    List<Polygon> wordPolygons = new ArrayList<>();
+    protected int offsetX = 0;
+    protected int offsetY = 0;
+
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -121,6 +131,7 @@ public class MenuBoardActivity extends AppCompatActivity {
         if(uridata == null){
             return;
         }
+
         //get image uri
         String struri = uridata.getString("imageUri");
         Uri uri = Uri.parse(struri);
@@ -129,9 +140,19 @@ public class MenuBoardActivity extends AppCompatActivity {
         //default language is "Korean"
         isLanguageChosen();
 
+        //save original bitmapbitmap =
+        try {
+            original_bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+        cur_bitmap = original_bitmap.copy(Bitmap.Config.ARGB_8888,true);;
+        //boundary_bitmap = original_bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        main_view.setImageBitmap(cur_bitmap);
+
         switch (uridata.getInt("header")){
             case FROM_CROPPING:
-                uploadImage(uri);
+                uploadImage(cur_bitmap);
                 break;
             case FROM_SAVED:
                 //read file
@@ -147,73 +168,105 @@ public class MenuBoardActivity extends AppCompatActivity {
                 break;
         }
 
-        //iMageView view = new iMageView(this);
-        //setContentView(view);
-
         //set touch listener to image view
         main_view.setOnTouchListener(new View.OnTouchListener() {
             @Override
             public boolean onTouch(View view, MotionEvent motionEvent) {
                 int xPos = 0, yPos = 0;
-                if(motionEvent.getAction() == MotionEvent.ACTION_DOWN){
+                int viewHeight = view.getHeight();
+                int viewWidth = view.getWidth();
+                int mH = view.getMeasuredHeight();
+                int mW = view.getMeasuredHeight();
+                //When touch event happens, get x y position of the event
+                xPos = (int)motionEvent.getX();
+                yPos = (int)motionEvent.getY();
+                offsetY = (cur_bitmap.getWidth() * yPos) / viewWidth;
+                offsetX = (cur_bitmap.getWidth() * xPos) / viewWidth;
+                Point curpt = new Point(xPos - offsetX, yPos - offsetY);
 
-                    //When touch event happens, get x y position of the event
-                    xPos = (int)motionEvent.getX();
-                    yPos = (int)motionEvent.getY();
-                    String str = String.valueOf(xPos);
-                    String strr = String.valueOf(yPos);
-/*
-                    //calculate paragraph boundary that the point is included
-                    if(paraVertices != null && wordVertices != null){
-                        int[] x = new int[4];
-                        int[] y = new int[4];
-                        for(int j = 0; j<paraVertices.size(); j++){
-                            List<GoogleCloudVisionV1Vertex> vertex = paraVertices.get(j);
-                            int i = 0;
-                            for(i = 0; i<4; i++){
-                                x[i] = vertex.get(i).getX();
-                                y[i] = vertex.get(i).getY();
+                if(paraVertices != null && wordVertices != null){
+
+                    switch(motionEvent.getAction()){
+                        case MotionEvent.ACTION_DOWN:
+                            points.add(curpt);
+                            break;
+                        case MotionEvent.ACTION_MOVE:
+                            //움직이는동안은 현재 좌표를 계속 저장
+                            points.add(curpt);
+                            break;
+                        case MotionEvent.ACTION_UP:
+                            //드래그가 끝나면 드래그되었던 점들에 대해 단어 polygon들에 속하는지 각각 검사한다
+                            //하나의 점에 대해 겹치는 단어박스 찾고 배열리스트에서 삭제
+                            //List<Point> tmp = new ArrayList<>();
+                            //tmp = points;
+                            Map<Integer, String> hashmap = new HashMap<>();
+                            for(Point p : points){
+                                int idx = 0;
+                                for(Polygon pl : wordPolygons){
+                                    if(pl.contains(p)){
+                                        //해시맵에 인덱스(키) 텍스트(값)으로 저장
+                                        hashmap.put(idx, target_txt.get(idx));
+                                        idx++;
+                                        break;
+                                    }else idx++;
+                                }
                             }
-                            Polygon polygon = Polygon.Builder().addVertex(new Point(x[0], y[0]))
-                                    .addVertex(new Point(x[1], y[1]))
-                                    .addVertex(new Point(x[2], y[2]))
-                                    .addVertex(new Point(x[3], y[3])).build();
-                            if(polygon.contains(new Point(xPos, yPos))){
-                                //if this rectangle contains touched point
-                                //draw image view again
-                                //curVertex = paraVertices.get(i);
-                                //drawing text
-                                Canvas canvas = new Canvas(bitmap);
-                                canvas.drawARGB(75,0,0,0);
-                                Paint pen = new Paint();
-                                pen.setStyle(Paint.Style.STROKE);
-                                //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
-                                pen.setStrokeCap(Paint.Cap.BUTT);
-                                pen.setStrokeJoin(Paint.Join.MITER);
-
-                                //draw word with yellow pen
-                                pen.setColor(Color.RED);
-                                pen.setStrokeWidth(20);
-
-                                canvas.drawPath(getRectPath(paraVertices.get(i)), pen);
-                            }
-                        }
+                            show(hashmap);
+                            hashmap.clear();
+                            points.clear();
+                            break;
                     }
-*/
-                    //Search for Beef Stew
-                    Intent myIntent = new Intent(MenuBoardActivity.this, ResultActivity.class);
-
-                    myIntent.putExtra("inputText", "beef stew");
-                    myIntent.putExtra("selectedLang", "English");
-                    startActivity(myIntent);
-
-                    Toast.makeText(MenuBoardActivity.this, "xPos: " + str + " yPos: " + strr, Toast.LENGTH_SHORT).show();
-                    return true;
-                }else
-                    return false;
+                }
+                return true;
             }
         });
 
+    }
+
+    public void show(Map<Integer, String> map){
+        String str = "";
+        Set<Integer> keySet = map.keySet(); // keySet 얻기
+        Iterator<Integer> keyIterator = keySet.iterator();
+        while(keyIterator.hasNext()) {
+            Integer key = keyIterator.next();
+            String value = map.get(key);
+            //drawBoundary(wordVertices.get(key), 10, Color.RED);
+            str = str + " " + value;
+        }
+        map.clear();
+        Toast.makeText(MenuBoardActivity.this, str, Toast.LENGTH_SHORT).show();
+        startResultActivity(str);
+        return;
+    }
+
+    private void startResultActivity(String str) {
+        Intent i = new Intent(this, ResultActivity.class);
+        i.putExtra("selectedLang", detected_lang);
+        i.putExtra("inputText", str);
+        startActivity(i);
+    }
+
+    public void Invalidate(int idx){
+        Paint pen = new Paint();
+        pen.setStyle(Paint.Style.STROKE);
+        //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
+        pen.setStrokeCap(Paint.Cap.BUTT);
+        pen.setStrokeJoin(Paint.Join.MITER);
+
+        //draw word with yellow pen
+        pen.setColor(Color.RED);
+        pen.setStrokeWidth(20);
+
+        Path path = new Path();
+        path.moveTo(0,0);
+        path.lineTo(500,500);
+
+        //System.out.printf("Vertices : %d %d\n", paraVertices.get(j).get(0).getX(), paraVertices.get(j).get(0).getY());
+
+        bit_canvas.drawPath(path, pen);
+        Toast.makeText(MenuBoardActivity.this, target_txt.get(idx), Toast.LENGTH_SHORT).show();
+
+        return;
     }
 
     private void isLanguageChosen(){
@@ -281,13 +334,13 @@ public class MenuBoardActivity extends AppCompatActivity {
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
             //Manifest.permission.WRITE_EXTERNAL_STORAGE가 접근 승낙 상태 일때
                 //Show message
-                Toast.makeText(MenuBoardActivity.this, "접근승낙", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MenuBoardActivity.this, "Permission acquired", Toast.LENGTH_SHORT).show();
 
             } else{
             //Manifest.permission.WRITE_EXTERNAL_STORAGE가 접근 거절 상태 일때
                 ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0);
                 //Show message
-                Toast.makeText(MenuBoardActivity.this, "접근거절", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MenuBoardActivity.this, "Access denied", Toast.LENGTH_SHORT).show();
 
             }
 
@@ -296,7 +349,7 @@ public class MenuBoardActivity extends AppCompatActivity {
 
             try {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
+                cur_bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
                 byte[] imageBytes = byteArrayOutputStream.toByteArray();
 
                 //Save image
@@ -334,17 +387,12 @@ public class MenuBoardActivity extends AppCompatActivity {
     }
 
     @SuppressLint("LongLogTag")
-    public void uploadImage(Uri uri) {
-        if (uri != null) {
+    public void uploadImage(Bitmap bm) {
+        if (bm != null) {
             try {
                 // scale the image to save on bandwidth
-                bitmap =
-                        scaleBitmapDown(
-                                MediaStore.Images.Media.getBitmap(getContentResolver(), uri),
-                                2000);
-                callCloudVision(bitmap);
-                main_view.setImageBitmap(bitmap);
-
+                //Bitmap tmp = scaleBitmapDown(bm, 2000);
+                callCloudVision(bm);
 
             } catch (IOException e) {
                 Log.d("MenuBoardActivity:uploadImage()", "Image picking failed because " + e.getMessage());
@@ -376,6 +424,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
             } catch (FileNotFoundException e) {
+                Toast.makeText(MenuBoardActivity.this, "Failed to write file", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
             result = true;
@@ -468,7 +517,7 @@ public class MenuBoardActivity extends AppCompatActivity {
 
                     //Do translation for each paragraph
                     try {
-                        Translate.Translations.List translationreq = translate.translations().list(target_txt, "ko");
+                        Translate.Translations.List translationreq = translate.translations().list(target_txt, choice);
                         TranslationsListResponse translationsResponse = translationreq.execute();
 
                         //save translated text in an array 'translated_txt'
@@ -494,21 +543,42 @@ public class MenuBoardActivity extends AppCompatActivity {
             protected void onPostExecute(List<GoogleCloudVisionV1AnnotateImageResponse> result){
                 //When OCR is finished
                 loading_str.setText("OCR finished");
-
-                //Draw boundaries of every paragraphs and words
                 drawBoundary(result);
 
+                //Make every word polygon
+                try{
+                    for(int j = 0; j<wordVertices.size(); j++){
+                        int[] x = new int[4];
+                        int[] y = new int[4];
+                        List<GoogleCloudVisionV1Vertex> vertex = wordVertices.get(j);
+                        for(int i = 0; i<4; i++){
+                            x[i] = vertex.get(i).getX();
+                            y[i] = vertex.get(i).getY();
+                        }
+                        Polygon poly = Polygon.Builder().addVertex(new Point(x[0], y[0]))
+                                .addVertex(new Point(x[1], y[1]))
+                                .addVertex(new Point(x[2], y[2]))
+                                .addVertex(new Point(x[3], y[3])).build();
+                        wordPolygons.add(poly);
+                    }
+                }catch (IndexOutOfBoundsException e){
+                    Log.d("wordVertices idx error", "loop failed because " + e.getMessage());
+                    Toast.makeText(getApplicationContext(), "Please try OCR again", Toast.LENGTH_LONG).show();
+                }
+                String dl = result.get(0).getFullTextAnnotation().getPages().get(0).getProperty().getDetectedLanguages().get(0).getLanguageCode();
+                if(dl == "en"){
+                    detected_lang = "English";
+                }else detected_lang = "Others";
             }
         }.execute();
     }
-
     private void drawBoundary(List<GoogleCloudVisionV1AnnotateImageResponse> result) {
 
         boolean startFlag = false;
         int idx = 0;
 
         //drawing text
-        Canvas canvas = new Canvas(bitmap);
+        Canvas canvas = new Canvas(cur_bitmap);
         canvas.drawARGB(75,0,0,0);
         Paint pen = new Paint();
         pen.setStyle(Paint.Style.STROKE);
@@ -521,13 +591,6 @@ public class MenuBoardActivity extends AppCompatActivity {
                 for(GoogleCloudVisionV1Block block : page.getBlocks()){
 
                     for(GoogleCloudVisionV1Paragraph paragraph : block.getParagraphs()){
-                        //draw paragraph with blue pen
-                        pen.setColor(Color.BLUE);
-                        pen.setStrokeWidth(8);
-
-                        List<GoogleCloudVisionV1Vertex> vertex2 = paragraph.getBoundingBox().getVertices();
-                        paraVertices.add(vertex2);
-                        canvas.drawPath(getRectPath(vertex2), pen);
 
                         //initialize paragraph string
                         String para_txt = "";
@@ -537,9 +600,9 @@ public class MenuBoardActivity extends AppCompatActivity {
                             pen.setColor(Color.YELLOW);
                             pen.setStrokeWidth(3);
 
-                            List<GoogleCloudVisionV1Vertex> vertex3 = word.getBoundingBox().getVertices();
-                            wordVertices.add(vertex2);
-                            canvas.drawPath(getRectPath(vertex3), pen);
+                            List<GoogleCloudVisionV1Vertex> vertex = word.getBoundingBox().getVertices();
+                            wordVertices.add(vertex);
+                            canvas.drawPath(getRectPath(vertex), pen);
 
                             //initialize word txt
                             String word_txt = "";
@@ -548,15 +611,39 @@ public class MenuBoardActivity extends AppCompatActivity {
                             for(GoogleCloudVisionV1Symbol symbol : word.getSymbols()){
                                 word_txt += symbol.getText();
                             }
-                            para_txt = para_txt + " " + word_txt;
+                            //save each word txt
+                            target_txt.add(word_txt);
                         }
-                        //save each paragraph txt
-                        target_txt.add(para_txt);
                     }
                 }
             }
         }
 
+
+    }
+    private void _drawBoundary(List<GoogleCloudVisionV1Vertex> vertex, int strokeWidth, int color) {
+
+        boolean startFlag = false;
+        int idx = 0;
+
+        //Always draw things on cur_bitmap
+        //cur_bitmap = boundary_bitmap.copy(Bitmap.Config.ARGB_8888, true);
+        Canvas canvas = new Canvas(cur_bitmap);
+
+        if(strokeWidth == 3)
+            canvas.drawARGB(75,0,0,0);
+
+        Paint pen = new Paint();
+        pen.setStyle(Paint.Style.STROKE);
+        //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
+        pen.setStrokeCap(Paint.Cap.BUTT);
+        pen.setStrokeJoin(Paint.Join.MITER);
+
+        //draw word with yellow pen
+        pen.setColor(color);
+        pen.setStrokeWidth(strokeWidth);
+
+        canvas.drawPath(getRectPath(vertex), pen);
 
     }
     private void callParaRectCloudVision(final Bitmap bitmap) throws IOException{
@@ -1535,7 +1622,7 @@ public class MenuBoardActivity extends AppCompatActivity {
 
     private void drawTranslation(String str, List<GoogleCloudVisionV1Vertex> vertex){
         //drawing text
-        Canvas canvas = new Canvas(bitmap);
+        Canvas canvas = new Canvas(cur_bitmap);
         canvas.drawARGB(175,0,0,0);
         Paint pen = new Paint();
         pen.setStyle(Paint.Style.STROKE);
@@ -1656,41 +1743,6 @@ public class MenuBoardActivity extends AppCompatActivity {
         }
 
         return message;
-    }
-
-}
-
-class iMageView extends View{
-
-    Bitmap main_img;
-    List<GoogleCloudVisionV1Vertex> vertices;
-
-    public iMageView(Context context) {
-        super(context);
-    }
-
-    @Override
-    protected void onDraw(Canvas canvas) {
-        super.onDraw(canvas);
-        MenuBoardActivity menuBoardActivity = new MenuBoardActivity();
-        if(menuBoardActivity.bitmap != null){
-
-            vertices = menuBoardActivity.curVertex;
-            //drawing text
-            canvas = new Canvas(menuBoardActivity.bitmap);
-            canvas.drawARGB(75,0,0,0);
-            Paint pen = new Paint();
-            pen.setStyle(Paint.Style.STROKE);
-            //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
-            pen.setStrokeCap(Paint.Cap.BUTT);
-            pen.setStrokeJoin(Paint.Join.MITER);
-
-            //draw word with yellow pen
-            pen.setColor(Color.YELLOW);
-            pen.setStrokeWidth(20);
-
-            canvas.drawPath(menuBoardActivity.getRectPath(vertices), pen);
-        }
     }
 
 }
