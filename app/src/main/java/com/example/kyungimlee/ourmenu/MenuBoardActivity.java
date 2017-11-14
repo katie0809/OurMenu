@@ -182,7 +182,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                 yPos = (int)motionEvent.getY();
                 offsetY = (cur_bitmap.getWidth() * yPos) / viewWidth;
                 offsetX = (cur_bitmap.getWidth() * xPos) / viewWidth;
-                Point curpt = new Point(xPos - offsetX, yPos - offsetY);
+                Point curpt = new Point(offsetX, offsetY);
 
                 if(paraVertices != null && wordVertices != null){
 
