@@ -55,7 +55,9 @@ import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Date;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
@@ -63,7 +65,7 @@ import java.util.Locale;
 public class MainActivity extends AppCompatActivity {
 
     private static final String CLOUD_TRANSLATION_API_KEY = "AIzaSyDON76sNwTcC2AuXU2L_y31z7BtHYP74Ko";
-    private static final String FILE_NAME = "";
+    private static String FILE_NAME = "";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
 
@@ -90,7 +92,6 @@ public class MainActivity extends AppCompatActivity {
     Handler handler = null;
     Handler menu_handler = null;
 
-
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -100,6 +101,9 @@ public class MainActivity extends AppCompatActivity {
         gallary_btn = (Button) findViewById(R.id.gallary_btn);
         saved_btn = (Button) findViewById(R.id.saved_btn);
         select_language = (Spinner) findViewById(R.id.lang_list);
+
+        //Set file name
+        FILE_NAME = getDate() +"_menu.jpg";
 
         camera_btn.setOnClickListener(new View.OnClickListener() {
             @Override
@@ -143,6 +147,14 @@ public class MainActivity extends AppCompatActivity {
             choice = "Korean";
         }
         return;
+    }
+
+    //get current date, time
+    public static String getDate(){
+        SimpleDateFormat dateFormat = new  SimpleDateFormat("yyMMdd_HHmm", java.util.Locale.getDefault());
+        Date date = new Date();
+        String strDate = dateFormat.format(date);
+        return strDate;
     }
 
     /**
