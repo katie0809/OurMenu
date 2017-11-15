@@ -103,10 +103,10 @@ public class MenuBoardActivity extends AppCompatActivity {
     private Bitmap boundary_bitmap;
     protected Bitmap cur_bitmap;
     private TextView loading_str;
+    private TextView translated_str;
     protected Canvas bit_canvas;
 
     private List<String> target_txt = new ArrayList<>();
-    private List<TranslationsResource> translated_txt = new ArrayList<>();
     private List<List<GoogleCloudVisionV1Vertex> > paraVertices = new ArrayList<List<GoogleCloudVisionV1Vertex> >(); // Set of vertices of paragraph
     private List<List<GoogleCloudVisionV1Vertex> > wordVertices = new ArrayList<List<GoogleCloudVisionV1Vertex> >(); // Set of vertices of paragraph
     protected List<GoogleCloudVisionV1Vertex> curVertex = new ArrayList<>();
@@ -125,6 +125,7 @@ public class MenuBoardActivity extends AppCompatActivity {
         //set image view
         main_view = (ImageView) findViewById(R.id.menu_img);
         loading_str = (TextView) findViewById(R.id.loading_str);
+        translated_str = (TextView) findViewById(R.id.translated_str);
 
         //accept information from a previous activity
         Bundle uridata = getIntent().getExtras();
@@ -167,6 +168,8 @@ public class MenuBoardActivity extends AppCompatActivity {
 
                 break;
         }
+
+        //set click listener to text view
 
         //set touch listener to image view
         main_view.setOnTouchListener(new View.OnTouchListener() {
@@ -234,8 +237,21 @@ public class MenuBoardActivity extends AppCompatActivity {
             str = str + " " + value;
         }
         map.clear();
-        Toast.makeText(MenuBoardActivity.this, str, Toast.LENGTH_SHORT).show();
-        startResultActivity(str);
+        //Toast.makeText(MenuBoardActivity.this, str, Toast.LENGTH_SHORT).show();
+        //Show detected text
+        loading_str.setText(str);
+
+        //call translation
+        List<String> list = new ArrayList<>();
+        list.add(str);
+        try {
+            callCloudTranslation(list);
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+
+
+        //startResultActivity(str);
         return;
     }
 
@@ -246,28 +262,6 @@ public class MenuBoardActivity extends AppCompatActivity {
         startActivity(i);
     }
 
-    public void Invalidate(int idx){
-        Paint pen = new Paint();
-        pen.setStyle(Paint.Style.STROKE);
-        //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
-        pen.setStrokeCap(Paint.Cap.BUTT);
-        pen.setStrokeJoin(Paint.Join.MITER);
-
-        //draw word with yellow pen
-        pen.setColor(Color.RED);
-        pen.setStrokeWidth(20);
-
-        Path path = new Path();
-        path.moveTo(0,0);
-        path.lineTo(500,500);
-
-        //System.out.printf("Vertices : %d %d\n", paraVertices.get(j).get(0).getX(), paraVertices.get(j).get(0).getY());
-
-        bit_canvas.drawPath(path, pen);
-        Toast.makeText(MenuBoardActivity.this, target_txt.get(idx), Toast.LENGTH_SHORT).show();
-
-        return;
-    }
 
     private void isLanguageChosen(){
         //check if an user made language choice
@@ -515,19 +509,6 @@ public class MenuBoardActivity extends AppCompatActivity {
                     GoogleCloudVisionV1BatchAnnotateImagesResponse response = annotateRequest.execute();
                     List<GoogleCloudVisionV1AnnotateImageResponse> responses = response.getResponses();
 
-                    //Do translation for each paragraph
-                    try {
-                        Translate.Translations.List translationreq = translate.translations().list(target_txt, choice);
-                        TranslationsListResponse translationsResponse = translationreq.execute();
-
-                        //save translated text in an array 'translated_txt'
-                        translated_txt = translationsResponse.getTranslations();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }
-
-                    annotationList = responses;
-
                     return responses;
 
                 } catch (GoogleJsonResponseException e) {
@@ -572,6 +553,54 @@ public class MenuBoardActivity extends AppCompatActivity {
             }
         }.execute();
     }
+
+    public void callCloudTranslation(final List<String> target) throws IOException{
+        new AsyncTask<Object, Void, List<TranslationsResource>>(){
+            @Override
+            protected List<TranslationsResource> doInBackground(Object... objects) {
+                String result = "";
+
+                HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
+                JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
+
+                //Access Google Translation
+                Translate translate;
+                translate = new Translate.Builder(httpTransport, jsonFactory, null)
+                        .setGoogleClientRequestInitializer(new TranslateRequestInitializer(API_KEY))
+                        .setApplicationName("OurMenu").build();
+
+                List<TranslationsResource> translated_txt = new ArrayList<>();
+
+                //Do translation for each paragraph
+                try {
+                    Translate.Translations.List translationreq = translate.translations().list(target, choice);
+                    TranslationsListResponse translationsResponse = translationreq.execute();
+
+                    //save translated text in an array 'translated_txt'
+                    translated_txt = translationsResponse.getTranslations();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                return translated_txt;
+            }
+
+            @Override
+            protected void onPostExecute(List<TranslationsResource> res) {
+
+                String str = "";
+                for(TranslationsResource resource : res){
+                    str = str + " " + resource.getTranslatedText();
+                }
+                translated_str.setText(str);
+                startResultActivity(target.get(0));
+            }
+        }.execute();
+    }
+
+
+
+
     private void drawBoundary(List<GoogleCloudVisionV1AnnotateImageResponse> result) {
 
         boolean startFlag = false;
@@ -598,7 +627,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                         for(GoogleCloudVisionV1Word word : paragraph.getWords()){
                             //draw word with yellow pen
                             pen.setColor(Color.YELLOW);
-                            pen.setStrokeWidth(3);
+                            pen.setStrokeWidth(2);
 
                             List<GoogleCloudVisionV1Vertex> vertex = word.getBoundingBox().getVertices();
                             wordVertices.add(vertex);
@@ -618,9 +647,53 @@ public class MenuBoardActivity extends AppCompatActivity {
                 }
             }
         }
-
-
     }
+
+
+
+
+
+    //***************** Currently not used ****************************//
+
+    public Path getRectPath(List<GoogleCloudVisionV1Vertex> vertices){
+
+        List<Integer> pointsX = new ArrayList<>();
+        List<Integer> pointsY = new ArrayList<>();
+        Path path = new Path();
+
+        for (GoogleCloudVisionV1Vertex vertex : vertices){
+            pointsX.add(vertex.getX());
+            pointsY.add(vertex.getY());
+        }out.print("\n");
+
+        path.moveTo(pointsX.get(0), pointsY.get(0));
+        path.lineTo(pointsX.get(1), pointsY.get(1));
+        path.lineTo(pointsX.get(2), pointsY.get(2));
+        path.lineTo(pointsX.get(3), pointsY.get(3));
+        path.lineTo(pointsX.get(0), pointsY.get(0));
+
+        return path;
+    }
+    public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
+
+        int originalWidth = bitmap.getWidth();
+        int originalHeight = bitmap.getHeight();
+        int resizedWidth = maxDimension;
+        int resizedHeight = maxDimension;
+
+        if (originalHeight > originalWidth) {
+            resizedHeight = maxDimension;
+            resizedWidth = (int) (resizedHeight * (float) originalWidth / (float) originalHeight);
+        } else if (originalWidth > originalHeight) {
+            resizedWidth = maxDimension;
+            resizedHeight = (int) (resizedWidth * (float) originalHeight / (float) originalWidth);
+        } else if (originalHeight == originalWidth) {
+            resizedHeight = maxDimension;
+            resizedWidth = maxDimension;
+        }
+        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
+    }
+
     private void _drawBoundary(List<GoogleCloudVisionV1Vertex> vertex, int strokeWidth, int color) {
 
         boolean startFlag = false;
@@ -1640,20 +1713,7 @@ public class MenuBoardActivity extends AppCompatActivity {
 
         return;
     }
-    private GoogleCloudVisionV1BoundingPoly addBoundary(List<GoogleCloudVisionV1Vertex> source, List<GoogleCloudVisionV1Vertex> dest){
-        GoogleCloudVisionV1BoundingPoly result = new GoogleCloudVisionV1BoundingPoly();
-        List<GoogleCloudVisionV1Vertex> vertices = null;
 
-        for(int i = 0; i<4; i++){
-            GoogleCloudVisionV1Vertex vertex = new GoogleCloudVisionV1Vertex();
-            vertex.setX(max(source.get(i).getX(), dest.get(i).getX()));
-            vertex.setY(max(source.get(i).getY(), dest.get(i).getY()));
-            vertices.set(i, vertex);
-        }
-        result.setVertices(vertices);
-
-        return result;
-    }
     private double getTextSize(List<GoogleCloudVisionV1Vertex> bound) {
         int x1=0, x2=0, y1=0, y2=0;
         double size=0;
@@ -1666,26 +1726,6 @@ public class MenuBoardActivity extends AppCompatActivity {
         size = Math.sqrt(((x1 - x2) * (x1 - x2)) + ((y1 - y2) * (y1 - y2)));
 
         return size;
-    }
-
-    public Path getRectPath(List<GoogleCloudVisionV1Vertex> vertices){
-
-        List<Integer> pointsX = new ArrayList<>();
-        List<Integer> pointsY = new ArrayList<>();
-        Path path = new Path();
-
-        for (GoogleCloudVisionV1Vertex vertex : vertices){
-            pointsX.add(vertex.getX());
-            pointsY.add(vertex.getY());
-        }out.print("\n");
-
-        path.moveTo(pointsX.get(0), pointsY.get(0));
-        path.lineTo(pointsX.get(1), pointsY.get(1));
-        path.lineTo(pointsX.get(2), pointsY.get(2));
-        path.lineTo(pointsX.get(3), pointsY.get(3));
-        path.lineTo(pointsX.get(0), pointsY.get(0));
-
-        return path;
     }
 
     public Path getPath(List<GoogleCloudVisionV1Vertex> vertices){
@@ -1709,26 +1749,6 @@ public class MenuBoardActivity extends AppCompatActivity {
         path.lineTo(x2, y2);
 
         return path;
-    }
-
-    public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
-
-        int originalWidth = bitmap.getWidth();
-        int originalHeight = bitmap.getHeight();
-        int resizedWidth = maxDimension;
-        int resizedHeight = maxDimension;
-
-        if (originalHeight > originalWidth) {
-            resizedHeight = maxDimension;
-            resizedWidth = (int) (resizedHeight * (float) originalWidth / (float) originalHeight);
-        } else if (originalWidth > originalHeight) {
-            resizedWidth = maxDimension;
-            resizedHeight = (int) (resizedWidth * (float) originalHeight / (float) originalWidth);
-        } else if (originalHeight == originalWidth) {
-            resizedHeight = maxDimension;
-            resizedWidth = maxDimension;
-        }
-        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
     }
 
 
