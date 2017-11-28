@@ -1,9 +1,6 @@
 package com.example.kyungimlee.ourmenu;
 
 
-import com.soundcloud.android.crop.Crop;
-
-import android.app.Activity;
 import android.content.Intent;
 import android.graphics.Bitmap;
 import android.net.Uri;
@@ -15,16 +12,12 @@ import android.util.Log;
 import android.view.Menu;
 import android.view.MenuItem;
 import android.widget.ImageView;
-import android.widget.TextView;
 import android.widget.Toast;
 
-import java.io.ByteArrayOutputStream;
-import java.io.File;
-import java.io.FileNotFoundException;
-import java.io.FileOutputStream;
-import java.io.IOException;
+import com.soundcloud.android.crop.Crop;
 
-import static com.example.kyungimlee.ourmenu.MenuBoardActivity.getDate;
+import java.io.File;
+import java.io.IOException;
 
 public class CroppingActivity extends AppCompatActivity {
 

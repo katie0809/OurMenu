@@ -14,16 +14,6 @@ import com.google.common.io.BaseEncoding;
 import java.security.MessageDigest;
 import java.security.NoSuchAlgorithmException;
 
-import android.content.pm.PackageInfo;
-import android.content.pm.PackageManager;
-import android.content.pm.Signature;
-import android.support.annotation.NonNull;
-
-import com.google.common.io.BaseEncoding;
-
-import java.security.MessageDigest;
-import java.security.NoSuchAlgorithmException;
-
 /**
  * Provides utility logic for getting the app's SHA1 signature. Used with restricted API keys.
  *
