@@ -102,7 +102,7 @@ public class GallaryActivity extends AppCompatActivity {
 
             if(converterView == null){
                 objImgView = new ImageView(mContext);
-                objImgView.setLayoutParams(new GridView.LayoutParams(200, 200));
+                objImgView.setLayoutParams(new GridView.LayoutParams(300, 300));
                 objImgView.setAdjustViewBounds(false);
                 objImgView.setScaleType(ImageView.ScaleType.CENTER_CROP);
                 objImgView.setPadding(8, 8, 8, 8);

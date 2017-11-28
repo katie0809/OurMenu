@@ -18,7 +18,7 @@ import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Spinner;
-import android.widget.Toast;
+//import android.widget.Toast;
 
 import java.io.ByteArrayOutputStream;
 import java.io.File;
@@ -84,7 +84,7 @@ public class LoadingActivity extends Activity {
             @Override
             public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
                 // 선택된 메뉴아이템을 Toast메시지로 띄운다
-                Toast.makeText(LoadingActivity.this,"Selected Language : "+select_language.getItemAtPosition(position),Toast.LENGTH_SHORT).show();
+                //Toast.makeText(LoadingActivity.this,"Selected Language : "+select_language.getItemAtPosition(position),Toast.LENGTH_SHORT).show();
             }
 
             @Override
@@ -128,13 +128,13 @@ public class LoadingActivity extends Activity {
             }else{
                 //if user doesn't select the language
                 //Toast메시지를 띄운다
-                Toast.makeText(LoadingActivity.this,"Please select the language",Toast.LENGTH_SHORT).show();
+                //Toast.makeText(LoadingActivity.this,"Please select the language",Toast.LENGTH_SHORT).show();
                 return;
             }
         }else{
             //Permission denied or no permission
             //Toast메시지를 띄운다
-            Toast.makeText(LoadingActivity.this,"Authorization Problem Occurred",Toast.LENGTH_SHORT).show();
+            //Toast.makeText(LoadingActivity.this,"Authorization Problem Occurred",Toast.LENGTH_SHORT).show();
             return;
         }
 

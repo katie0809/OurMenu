@@ -41,6 +41,8 @@ public class ResultActivity extends AppCompatActivity {
     Handler con_handler;
     Handler cse_handler;
 
+    boolean noDataInSpoon = false;
+
     @Override
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
@@ -77,10 +79,14 @@ public class ResultActivity extends AppCompatActivity {
                     String food_id;
                     ArrayList<String> food_ingre = new ArrayList<String>();
 
-                    if (food_arr == null)
+                    if (food_arr.length() == 0) {
+                        noDataInSpoon = true;
                         noData = true;
+                    }
                     else {
+                        noDataInSpoon = false;
                         noData = false;
+
                         food_id = food_arr.getJSONObject(0).get("id").toString();
 
                         String getIngreURL = "https://spoonacular-recipe-food-nutrition-v1.p.mashape.com/recipes/" +
@@ -134,7 +140,7 @@ public class ResultActivity extends AppCompatActivity {
             };
         };
 
-        Thread CSE_Thread = new Thread() {
+        final Thread CSE_Thread = new Thread() {
             @Override
             public void run() {
                 Bundle foodInfoBundle = new Bundle();
@@ -169,7 +175,8 @@ public class ResultActivity extends AppCompatActivity {
             public void handleMessage(Message msg) {
                 Bundle foodInfoBundle = msg.getData();
                 if(foodInfoBundle.getBoolean("noData") == true) {
-                    food_ingre.setText("No Food Data");
+                    // food_ingre.setText("No Food Data");
+                    CSE_Thread.start();
                 }
                 else if(foodInfoBundle.getBoolean("noData") == false) {
                     try {

@@ -3,6 +3,7 @@
     <string name="start_button">Start</string>
     <string name="checkbox">Do not show language chooser again</string>
     <string name="checkbox_explain">You could change laguage setting on Setting menu</string>
+    <string name="ocr_error">OCR failed. (1) Maybe there are too many characters in your menu. (2) change wifi connection. Some networks deny access to OCR</string>
 
     <string name="action_select">Pick</string>
     <string name="action_save">Save</string>

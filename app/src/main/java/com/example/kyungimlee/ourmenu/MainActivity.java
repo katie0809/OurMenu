@@ -20,14 +20,16 @@ import android.support.v7.app.AlertDialog;
 import android.support.v7.app.AppCompatActivity;
 import android.support.v7.widget.Toolbar;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.AdapterView;
 import android.widget.ArrayAdapter;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.Spinner;
 import android.widget.TextView;
-import android.widget.Toast;
+//import android.widget.Toast;
 
 import com.google.api.services.translate.model.*;
 import com.google.api.services.translate.Translate;
@@ -81,6 +83,7 @@ public class MainActivity extends AppCompatActivity {
     private Button camera_btn;
     private Button gallary_btn;
     private Button saved_btn;
+    private Button setting_btn;
     private Spinner select_language;
 
     // 코드상에서 사용된 변수
@@ -100,6 +103,7 @@ public class MainActivity extends AppCompatActivity {
         camera_btn = (Button) findViewById(R.id.camera_btn);
         gallary_btn = (Button) findViewById(R.id.gallary_btn);
         saved_btn = (Button) findViewById(R.id.saved_btn);
+        setting_btn = (Button) findViewById(R.id.setting_btn);
         select_language = (Spinner) findViewById(R.id.lang_list);
 
         //Set file name
@@ -123,6 +127,12 @@ public class MainActivity extends AppCompatActivity {
                 startSavedMenuGallery();
             }
         });
+        setting_btn.setOnClickListener(new View.OnClickListener() {
+            @Override
+            public void onClick(View v) {
+                //Show custom dialog
+            }
+        });
 
         //check if an user already made fixed language choice
         File fixed = new File(getExternalPath()+"/OurMenu/setting/languageFixed.txt");
@@ -139,11 +149,11 @@ public class MainActivity extends AppCompatActivity {
         if(langFile.exists()){
             byte[] buffer = readFile(langFile);
             choice = new String(buffer);
-            Toast.makeText(MainActivity.this, choice, Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, choice, Toast.LENGTH_SHORT).show();
         }else{
             //if user didn's select the language
             //Show message
-            Toast.makeText(MainActivity.this, "No lanugage chose. Use korean as a default language", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MainActivity.this, "No lanugage chose. Use korean as a default language", Toast.LENGTH_SHORT).show();
             choice = "Korean";
         }
         return;
