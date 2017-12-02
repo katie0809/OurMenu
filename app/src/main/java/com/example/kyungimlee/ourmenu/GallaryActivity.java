@@ -17,6 +17,7 @@ import android.widget.ImageView;
 import android.widget.Toast;
 
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
@@ -34,7 +35,12 @@ public class GallaryActivity extends AppCompatActivity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_gallary);
-        for(File file : f.listFiles()){
+        for(File file : f.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return pathname.toString().endsWith(".jpg");
+            }
+        })){
             image_path.add(file.getName());
         }
 
@@ -63,6 +69,7 @@ public class GallaryActivity extends AppCompatActivity {
         Uri uri = Uri.fromFile(bitmap);
 
         Intent i = new Intent(this, MenuBoardActivity.class);
+        i.putExtra("imagePath", _path);
         i.putExtra("imageUri", uri.toString());
         i.putExtra("header", 1);
 

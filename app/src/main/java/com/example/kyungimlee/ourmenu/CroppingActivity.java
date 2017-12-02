@@ -48,7 +48,7 @@ public class CroppingActivity extends AppCompatActivity {
 
         beginCrop(uri);
 
-    }
+    }/*
     public void uploadImage(Uri uri) {
         if (uri != null) {
             try {
@@ -65,7 +65,7 @@ public class CroppingActivity extends AppCompatActivity {
             Log.d("Cropping", "Image picker gave us a null image.");
             Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
         }
-    }
+    }*/
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {

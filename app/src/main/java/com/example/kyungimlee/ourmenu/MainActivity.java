@@ -91,8 +91,8 @@ public class MainActivity extends AppCompatActivity {
         });
         setting_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View v) {
-                //Show custom dialog
+            public void onClick(View view) {
+                startSetting();
             }
         });
 
@@ -103,6 +103,10 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, LoadingActivity.class));
         }
 
+    }
+
+    private void startSetting() {
+        startActivity(new Intent(this, SettingActivity.class));
     }
 
     private void isLanguageChosen(){
@@ -179,25 +183,6 @@ public class MainActivity extends AppCompatActivity {
 
     private void startSavedMenuGallery() {
         //start saved menu gallery
-        /*
-        if (PermissionUtils.requestPermission(this, GALLERY_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE)) {
-            Intent intent = new Intent();
-            File filePath = new File(getExternalPath() + "/OurMenu/res/pictures/");
-            Uri photoUri = FileProvider.getUriForFile(this, getApplicationContext().getPackageName() + ".provider", filePath);
-
-            //intent.setType("image/*");
-            intent.setAction(Intent.ACTION_GET_CONTENT);
-            intent.setDataAndType(photoUri, "image/*");
-            startActivityForResult(Intent.createChooser(intent, "Select a photo"),
-                    GALLERY_IMAGE_REQUEST);
-        }
-
-        Uri targetUri = MediaStore.Images.Media.EXTERNAL_CONTENT_URI;
-        String targetDir = getExternalPath() + "/OurMenu/res/pictures/";
-        targetUri = targetUri.buildUpon().appendQueryParameter("bucketId", String.valueOf(targetDir.toLowerCase().hashCode())).build();
-        Intent intent = new Intent(Intent.ACTION_VIEW, targetUri);
-        startActivity(intent);
-        */
         Intent intent = new Intent(this, GallaryActivity.class);
         startActivity(intent);
 

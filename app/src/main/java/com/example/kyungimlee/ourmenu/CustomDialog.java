@@ -7,11 +7,13 @@ import android.os.Bundle;
 //import android.support.design.widget.TextInputEditText;
 //import android.text.TextUtils;
 import android.view.View;
+import android.widget.Button;
 import android.widget.TextView;
 
 /**
  * Created by charlie on 2017. 8. 18..
  */
+
 
 public class CustomDialog extends Dialog implements View.OnClickListener{
 
@@ -20,6 +22,7 @@ public class CustomDialog extends Dialog implements View.OnClickListener{
     private static final int LAYOUT = R.layout.dialog_custom;
     TextView translatedTxt;
     TextView originTxt;
+    Button next_btn;
     private Context context;
 
     private String original_txt;
@@ -45,8 +48,9 @@ public class CustomDialog extends Dialog implements View.OnClickListener{
 
         translatedTxt = (TextView) findViewById(R.id.result_txt);
         originTxt = (TextView) findViewById(R.id.origin_txt);
+        next_btn = (Button) findViewById(R.id.next_btn);
 
-        translatedTxt.setOnClickListener(this);
+        next_btn.setOnClickListener(this);
 
         translatedTxt.setText(result_txt);
         originTxt.setText(original_txt);

@@ -4,6 +4,7 @@ import android.Manifest;
 import android.annotation.SuppressLint;
 import android.content.Intent;
 import android.content.pm.PackageManager;
+import android.database.Cursor;
 import android.graphics.Bitmap;
 import android.graphics.Canvas;
 import android.graphics.Color;
@@ -29,6 +30,7 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
+import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -64,22 +66,31 @@ import com.google.api.services.vision.v1.model.GoogleCloudVisionV1Word;
 import com.snatik.polygon.Point;
 import com.snatik.polygon.Polygon;
 
+import java.io.BufferedReader;
+import java.io.BufferedWriter;
 import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
+import java.io.FileWriter;
 import java.io.IOException;
+import java.io.ObjectInputStream;
+import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.HashMap;
 import java.util.Iterator;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.Map;
-import java.util.Set;
+import java.util.Queue;
+import java.util.StringTokenizer;
 import java.util.TreeMap;
 
+import static java.lang.System.load;
 import static java.lang.System.out;
 
 public class MenuBoardActivity extends AppCompatActivity {
@@ -106,6 +117,7 @@ public class MenuBoardActivity extends AppCompatActivity {
     protected Bitmap cur_bitmap;
     private TextView loading_str;
     private TextView translated_str;
+    private Button next_btn;
     protected Canvas bit_canvas;
 
     private List<String> target_txt = new ArrayList<>();
@@ -155,24 +167,98 @@ public class MenuBoardActivity extends AppCompatActivity {
         switch (uridata.getInt("header")){
             case FROM_CROPPING:
                 uploadImage(cur_bitmap);
+
                 break;
             case FROM_SAVED:
-                //read file
-                /*String filename = new File(uri.getPath()).getName();
-                String name = filename.split(".")[0];
-                File annotFile = new File(getExternalPath()+"/OurMenu/res/annotations/" + name +".txt");
-                byte[] bytefile = readFile(annotFile);
-                List<GoogleCloudVisionV1AnnotateImageResponse> tmp = new ArrayList<>();
-*/
-                uploadImage(cur_bitmap);
 
-                //get annotation or whatever else parameter
+                //When image is loaded
+                loading_str.setText("Image loaded");
+                String imagePath = uridata.getString("imagePath");
 
-                //resize the image, attach image to bitmap parameter
+                try{
+                    //convert uri to path
+                    //String path = uri_to_path(uri);
+                    String data_path = "", txt_path="";
+                    StringTokenizer st = new StringTokenizer(imagePath,".");
+                    String token = st.nextToken();
+                    data_path = token + ".txt";
+                    txt_path = token + "_.txt";
 
-                //attach bitmap to main view
+                    //data_path = getExternalPath() + "OurMenu/res/pictures/pic_171201_1704.txt";
+                    File f = new File(data_path);
+                    File txt = new File(txt_path);
+                    FileReader fr = null, frr = null;
+                    BufferedReader br = null, brr=null;
+                    String read = "";
+                    Queue<Integer> queue = new LinkedList<>();
 
-                //draw translation or boundaries using annotation file
+                    //read WordVertices
+                    fr = new FileReader(f);
+                    br = new BufferedReader(fr);
+                    while((read = br.readLine()) != null){
+                        StringTokenizer stt = new StringTokenizer(read, " ");
+                        while(stt.hasMoreTokens()){
+                            String vertice = "";
+                            vertice = stt.nextToken();
+                            queue.add(Integer.parseInt(vertice));
+                        }
+                        read = "";
+                    }
+                    fr.close();
+                    br.close();
+                    read = "";
+
+                    //read target_txt
+                    frr = new FileReader(txt);
+                    brr = new BufferedReader(frr);
+                    while((read=brr.readLine()) != null){
+                        target_txt.add(read);
+                    }
+                    frr.close();
+                    brr.close();
+
+                    int loop = queue.size()/8;
+                    for(int j = 0; j<loop; j++){
+                        List<GoogleCloudVisionV1Vertex> vertices = new ArrayList<>();
+                        for(int i = 0; i<4; i++){
+                            GoogleCloudVisionV1Vertex vertex = new GoogleCloudVisionV1Vertex();
+                            vertex.setX(queue.poll());
+                            vertex.setY(queue.poll());
+                            vertices.add(i, vertex);
+                        }
+                        wordVertices.add(j, vertices);
+                    }
+
+                    //draw boundaries
+                    drawBoundary();
+
+                    //Make every word polygon
+                    for(int j = 0; j<wordVertices.size(); j++){
+                        int[] x = new int[4];
+                        int[] y = new int[4];
+                        List<GoogleCloudVisionV1Vertex> vertex = wordVertices.get(j);
+                        for(int i = 0; i<4; i++){
+                            x[i] = vertex.get(i).getX();
+                            y[i] = vertex.get(i).getY();
+                        }
+                        Polygon poly = Polygon.Builder().addVertex(new Point(x[0], y[0]))
+                                .addVertex(new Point(x[1], y[1]))
+                                .addVertex(new Point(x[2], y[2]))
+                                .addVertex(new Point(x[3], y[3])).build();
+                        wordPolygons.add(poly);
+                    }
+
+                    loading_str.setText("file loading finished");
+
+
+                }catch (IndexOutOfBoundsException e){
+                    Log.d("wordVertices idx error", "loop failed because " + e.getMessage());
+                    Toast.makeText(getApplicationContext(), "Please try OCR again", Toast.LENGTH_LONG).show();
+                } catch (FileNotFoundException e) {
+                    e.printStackTrace();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
 
                 break;
         }
@@ -195,7 +281,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                 offsetX = (cur_bitmap.getWidth() * xPos) / viewWidth;
                 Point curpt = new Point(offsetX, offsetY);
 
-                if(paraVertices != null && wordVertices != null){
+                if(wordVertices != null){
 
                     switch(motionEvent.getAction()){
                         case MotionEvent.ACTION_DOWN:
@@ -246,6 +332,17 @@ public class MenuBoardActivity extends AppCompatActivity {
 
     }
 
+    private String uri_to_path(Uri uri){
+        String res = null;
+        String[] image_data = {MediaStore.Images.Media.DATA};
+        Cursor cursor = getContentResolver().query(uri, image_data, null, null,null);
+        if(cursor.moveToFirst()){
+            int col = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+            res=cursor.getString(col);
+        }
+        cursor.close();
+        return res;
+    }
     public void show(Map<Integer, String> map){
         String str = "";
 
@@ -361,22 +458,26 @@ public class MenuBoardActivity extends AppCompatActivity {
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         if (item.getItemId() == R.id.action_save) {
+            //OCR이 아직 수행되지 않은 경우
+            if(wordVertices == null)
+                return false;
+
             //Ask permission for access to external storage
             if (ContextCompat.checkSelfPermission(this, Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED){
             //Manifest.permission.WRITE_EXTERNAL_STORAGE가 접근 승낙 상태 일때
                 //Show message
-                Toast.makeText(MenuBoardActivity.this, "Permission acquired", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MenuBoardActivity.this, "Permission acquired", Toast.LENGTH_SHORT).show();
 
             } else{
             //Manifest.permission.WRITE_EXTERNAL_STORAGE가 접근 거절 상태 일때
                 ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0);
                 //Show message
-                Toast.makeText(MenuBoardActivity.this, "Access denied", Toast.LENGTH_SHORT).show();
-
+                //Toast.makeText(MenuBoardActivity.this, "Access denied", Toast.LENGTH_SHORT).show();
+                loading_str.setText("Permission denied for writing storage");
             }
 
             //Show message
-            Toast.makeText(MenuBoardActivity.this, "파일 저장 시작", Toast.LENGTH_SHORT).show();
+            //Toast.makeText(MenuBoardActivity.this, "파일 저장 시작", Toast.LENGTH_SHORT).show();
 
             try {
                 ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
@@ -393,15 +494,31 @@ public class MenuBoardActivity extends AppCompatActivity {
                 fileOutput.close();
 
                 //Save annotations
-                File file2 = new File(getExternalPath()+"/OurMenu/res/annotations/pic_" + date + ".txt");
-                writeFile(file2, annotationList.toString().getBytes());
+                BufferedWriter bufferedWriter = new BufferedWriter(new FileWriter(getExternalPath()+"/OurMenu/res/pictures/pic_" + date + ".txt"));
+                BufferedWriter bufferedWriter2 = new BufferedWriter(new FileWriter(getExternalPath()+"/OurMenu/res/pictures/pic_" + date + "_.txt"));
+
+                for(List<GoogleCloudVisionV1Vertex> vertexList : wordVertices){
+                    for(GoogleCloudVisionV1Vertex vertex : vertexList){
+                        String s = vertex.getX() + " " + vertex.getY();
+                        bufferedWriter.write(s);
+                        bufferedWriter.newLine();
+                    }
+                }
+                bufferedWriter.close();
+
+                for(String str : target_txt){
+                    bufferedWriter2.write(str);
+                    bufferedWriter2.newLine();
+                }
+                bufferedWriter2.close();
 
                 //Show message
-                Toast.makeText(MenuBoardActivity.this, "파일 저장 성공", Toast.LENGTH_SHORT).show();
+                Toast.makeText(MenuBoardActivity.this, "Saved", Toast.LENGTH_LONG).show();
+                loading_str.setText("File Saved");
 
             } catch (IOException e) {
                 //Show message
-                Toast.makeText(MenuBoardActivity.this, "파일 저장 실패", Toast.LENGTH_SHORT).show();
+                //Toast.makeText(MenuBoardActivity.this, "파일 저장 실패", Toast.LENGTH_SHORT).show();
                 e.printStackTrace();
             }
 
@@ -674,6 +791,30 @@ public class MenuBoardActivity extends AppCompatActivity {
         dialog.show();
     }
 
+    private void drawBoundary(){
+
+        boolean startFlag = false;
+        int idx = 0;
+
+        //drawing text
+        Bitmap tempBitmap = Bitmap.createBitmap(cur_bitmap.getWidth(), cur_bitmap.getHeight(), Bitmap.Config.ARGB_8888);
+        Canvas canvas = new Canvas(tempBitmap);
+        canvas.drawBitmap(cur_bitmap, 0, 0, null);
+        canvas.drawARGB(75,0,0,0);
+        Paint pen = new Paint();
+        pen.setStyle(Paint.Style.STROKE);
+        pen.setColor(Color.YELLOW);
+        pen.setStrokeWidth(1);
+        //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
+        pen.setStrokeCap(Paint.Cap.BUTT);
+        pen.setStrokeJoin(Paint.Join.MITER);
+
+        for(List<GoogleCloudVisionV1Vertex> vertex : wordVertices){
+                canvas.drawPath(getRectPath(vertex), pen);
+        }
+        main_view.setImageDrawable(new BitmapDrawable(getResources(), tempBitmap));
+
+    }
 
     private void drawBoundary(List<GoogleCloudVisionV1AnnotateImageResponse> result) {
 
@@ -726,7 +867,25 @@ public class MenuBoardActivity extends AppCompatActivity {
 
     }
 
+    public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
 
+        int originalWidth = bitmap.getWidth();
+        int originalHeight = bitmap.getHeight();
+        int resizedWidth = maxDimension;
+        int resizedHeight = maxDimension;
+
+        if (originalHeight > originalWidth) {
+            resizedHeight = maxDimension;
+            resizedWidth = (int) (resizedHeight * (float) originalWidth / (float) originalHeight);
+        } else if (originalWidth > originalHeight) {
+            resizedWidth = maxDimension;
+            resizedHeight = (int) (resizedWidth * (float) originalHeight / (float) originalWidth);
+        } else if (originalHeight == originalWidth) {
+            resizedHeight = maxDimension;
+            resizedWidth = maxDimension;
+        }
+        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
+    }
 
 
 
@@ -750,25 +909,6 @@ public class MenuBoardActivity extends AppCompatActivity {
         path.lineTo(pointsX.get(0), pointsY.get(0));
 
         return path;
-    }
-    public Bitmap scaleBitmapDown(Bitmap bitmap, int maxDimension) {
-
-        int originalWidth = bitmap.getWidth();
-        int originalHeight = bitmap.getHeight();
-        int resizedWidth = maxDimension;
-        int resizedHeight = maxDimension;
-
-        if (originalHeight > originalWidth) {
-            resizedHeight = maxDimension;
-            resizedWidth = (int) (resizedHeight * (float) originalWidth / (float) originalHeight);
-        } else if (originalWidth > originalHeight) {
-            resizedWidth = maxDimension;
-            resizedHeight = (int) (resizedWidth * (float) originalHeight / (float) originalWidth);
-        } else if (originalHeight == originalWidth) {
-            resizedHeight = maxDimension;
-            resizedWidth = maxDimension;
-        }
-        return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
     }
 
     private void _drawBoundary(List<GoogleCloudVisionV1Vertex> vertex, int strokeWidth, int color) {
@@ -1790,7 +1930,6 @@ public class MenuBoardActivity extends AppCompatActivity {
 
         return;
     }
-
     private double getTextSize(List<GoogleCloudVisionV1Vertex> bound) {
         int x1=0, x2=0, y1=0, y2=0;
         double size=0;
@@ -1804,7 +1943,6 @@ public class MenuBoardActivity extends AppCompatActivity {
 
         return size;
     }
-
     public Path getPath(List<GoogleCloudVisionV1Vertex> vertices){
 
         int x1=0, x2=0, y1=0, y2=0;
@@ -1827,7 +1965,6 @@ public class MenuBoardActivity extends AppCompatActivity {
 
         return path;
     }
-
 
     private String convertResponseToString(GoogleCloudVisionV1BatchAnnotateImagesResponse response) {
         String message = "I found these things:\n\n";

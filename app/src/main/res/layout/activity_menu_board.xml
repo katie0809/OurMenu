@@ -6,32 +6,37 @@
     android:layout_height="match_parent"
     tools:context="com.example.kyungimlee.ourmenu.MenuBoardActivity">
 
-    <ScrollView
+    <LinearLayout
         android:layout_width="match_parent"
-        android:layout_height="match_parent">
+        android:layout_height="806dp"
+        android:orientation="vertical"
+        tools:layout_editor_absoluteX="8dp"
+        tools:layout_editor_absoluteY="0dp">
 
-        <LinearLayout
+        <ImageView
+            android:id="@+id/menu_img"
             android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:orientation="vertical"
-            tools:layout_editor_absoluteX="8dp"
-            tools:layout_editor_absoluteY="302dp">
+            android:layout_height="411dp"
+            android:scaleType="fitStart"
+            app:srcCompat="@mipmap/ic_launcher" />
 
-            <ImageView
-                android:id="@+id/menu_img"
-                android:layout_width="match_parent"
-                android:layout_height="411dp"
-                android:scaleType="fitStart"
-                app:srcCompat="@mipmap/ic_launcher" />
+        <ScrollView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            tools:layout_editor_absoluteX="0dp"
+            tools:layout_editor_absoluteY="0dp">
 
             <TextView
                 android:id="@+id/loading_str"
                 android:layout_width="match_parent"
-                android:layout_height="102dp"
+                android:layout_height="match_parent"
+                android:layout_marginLeft="10dp"
+                android:layout_marginRight="10dp"
+                android:layout_marginTop="10dp"
                 android:textAlignment="center"
-                android:textSize="21sp" />
+                android:textSize="24sp" />
+        </ScrollView>
 
-        </LinearLayout>
-    </ScrollView>
+    </LinearLayout>
 
 </android.support.constraint.ConstraintLayout>

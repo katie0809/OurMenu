@@ -14,19 +14,32 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-        <activity android:name=".MainActivity"
+
+        <activity
+            android:name=".MainActivity"
             android:theme="@style/AppTheme_notitle">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
+
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MenuBoardActivity" />
+        <activity android:name=".MenuBoardActivity"
+            android:label="Menu"/>
         <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
         <activity android:name=".CroppingActivity" />
         <activity
             android:name=".LoadingActivity"
             android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+        <activity
+            android:name=".GallaryActivity"
+            android:label="Saved Menu" />
+        <activity android:name=".ResultActivity" />
+        <activity
+            android:name=".SettingActivity"
+            android:theme="@style/AppTheme_notitle">
+
+        </activity>
 
         <provider
             android:name="android.support.v4.content.FileProvider"
@@ -38,9 +51,6 @@
                 android:resource="@xml/provider_paths" />
         </provider>
 
-        <activity android:name=".GallaryActivity"
-            android:theme="@style/AppTheme_notitle"/>
-        <activity android:name=".ResultActivity"></activity>
     </application>
 
 </manifest>
