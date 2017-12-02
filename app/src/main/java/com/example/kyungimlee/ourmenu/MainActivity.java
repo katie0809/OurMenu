@@ -1,7 +1,9 @@
 package com.example.kyungimlee.ourmenu;
 
 import android.Manifest;
+import android.content.Context;
 import android.content.Intent;
+import android.content.res.Resources;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -10,6 +12,7 @@ import android.provider.MediaStore;
 import android.support.annotation.NonNull;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
+import android.telephony.TelephonyManager;
 import android.util.Log;
 import android.view.View;
 import android.widget.Button;
@@ -41,7 +44,7 @@ public class MainActivity extends AppCompatActivity {
     public static final int SAVED_MENU_REQUEST = 4;
 
     private TextView mImageDetails;
-    private ImageView mMainImage;
+    private ImageView flag;
     private Button camera_btn;
     private Button gallary_btn;
     private Button saved_btn;
@@ -66,11 +69,24 @@ public class MainActivity extends AppCompatActivity {
         gallary_btn = (Button) findViewById(R.id.gallary_btn);
         saved_btn = (Button) findViewById(R.id.saved_btn);
         setting_btn = (Button) findViewById(R.id.setting_btn);
-        select_language = (Spinner) findViewById(R.id.lang_list);
+        select_language = (Spinner) findViewById(R.id.lang_list2);
+        flag = (ImageView) findViewById(R.id.imageView2);
 
         //Set file name
         FILE_NAME = getDate() +"_menu.jpg";
 
+        //Set flags
+        TelephonyManager tm = (TelephonyManager)this.getSystemService(Context.TELEPHONY_SERVICE);
+        String countryCodeValue = tm.getNetworkCountryIso();
+        if(countryCodeValue.compareTo("do") == 0)
+            countryCodeValue = "dom";
+        String resName = "@drawable/" + countryCodeValue;
+        if(countryCodeValue != null){
+            Resources resources = this.getResources();
+            final int resourceId = resources.getIdentifier(countryCodeValue, "drawable", this.getPackageName());
+            flag.setImageResource(resourceId);
+
+        }
         camera_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {

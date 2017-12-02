@@ -1,8 +1,7 @@
 package com.example.kyungimlee.ourmenu;
 
-        import android.Manifest;
-        import android.app.Activity;
-        import android.os.Bundle;
+import android.Manifest;
+import android.os.Bundle;
         import android.os.Environment;
         import android.support.v7.app.AppCompatActivity;
         import android.util.Log;
@@ -12,8 +11,10 @@ package com.example.kyungimlee.ourmenu;
         import android.widget.Button;
         import android.widget.CheckBox;
         import android.widget.Spinner;
+        import android.widget.Toast;
 
         import java.io.File;
+        import java.io.FileInputStream;
         import java.io.FileNotFoundException;
         import java.io.FileOutputStream;
         import java.io.IOException;
@@ -40,13 +41,12 @@ public class SettingActivity extends AppCompatActivity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_setting);
 
-        select_language = (Spinner) findViewById(R.id.lang_list);
-        start_btn = (Button) findViewById(R.id.start_btn);
-        check_btn = (CheckBox) findViewById(R.id.checkBox);
+        select_language = (Spinner) findViewById(R.id.lang_list2);
+        start_btn = (Button) findViewById(R.id.confirm_btn);
+        check_btn = (CheckBox) findViewById(R.id.checkBox2);
 
         // 드롭다운 메뉴의 기본값은 Select Language
         items = new ArrayList<String>();
-        items.add("Select Language");
 
         // 언어명 저장된 배열리스트와 GUI 컴포넌트 spinner 연결해준다
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
@@ -66,6 +66,17 @@ public class SettingActivity extends AppCompatActivity {
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         select_language.setAdapter(adapter);
+        getChoice();
+
+        // 사용자가 선택했던 언어를 default로
+        int tmp = 0;
+        for(int i = 0; i<5; i++){
+            if(choice.compareTo(supported_lang.get(items.get(i).toString()).toString()) == 0){
+                tmp = i;
+                break;
+            }
+        }
+        select_language.setSelection(tmp);
 
         // 사용자가 번역 원하는 언어 택한경우
         select_language.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
@@ -89,29 +100,62 @@ public class SettingActivity extends AppCompatActivity {
         start_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if((String)select_language.getSelectedItem().toString() != "Select Language")
-                    choice = supported_lang.get(select_language.getSelectedItem().toString()).toString();
                 startApp();
+                Toast.makeText(SettingActivity.this,"Saved",Toast.LENGTH_SHORT).show();
+
             }
         });
 
 
     }
+
+    /**
+     * 파일 읽어 오기
+     * @param file
+     */
+    private byte[] readFile(File file){
+        int readcount=0;
+        if(file!=null&&file.exists()){
+            try {
+                FileInputStream fis = new FileInputStream(file);
+                readcount = (int)file.length();
+                byte[] buffer = new byte[readcount];
+                fis.read(buffer);
+                for(int i=0 ; i<file.length();i++){
+                    Log.d(TAG, ""+buffer[i]);
+                }
+                fis.close();
+
+                return buffer;
+            } catch (Exception e) {
+                e.printStackTrace();
+            }
+        }
+        return null;
+    }
+
+
+    public void getChoice(){
+        //check if an user made language choice
+        File langFile = new File(getExternalPath()+"/OurMenu/setting/languageChoice.txt");
+        if(langFile.exists()){
+            byte[] buffer = readFile(langFile);
+            choice = new String(buffer);
+        }else{
+            //if user didn's select the language
+            choice = "ko";
+        }
+    }
+
     public void startApp(){
         //Intent i = new Intent(this, MainActivity.class);
         File setting = null, langfile = null;
-
-        //i.putExtra("langChoice", choice);
+        choice = supported_lang.get(select_language.getSelectedItem().toString()).toString();
+        setting = makeDirectory(getExternalPath()+"/OurMenu/setting/");
 
         //Ask for External Storage Writing Permission
         if(PermissionUtils.requestPermission(this, WRITE_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)){
             //Save image
-            //Make folder OurMenu, OurMenu/res/annotations, OurMenu/res/pictures, OurMenu/setting
-            makeDirectory(getExternalPath()+"/OurMenu/");
-            setting = makeDirectory(getExternalPath()+"/OurMenu/setting/");
-            makeDirectory(getExternalPath()+"/OurMenu/res/");
-            makeDirectory(getExternalPath()+"/OurMenu/res/pictures/");
-            makeDirectory(getExternalPath()+"/OurMenu/res/annotations/");
 
             //Make file languageChoice.txt on OurMenu/setting
             langfile = makeFile(setting, getExternalPath()+"/OurMenu/setting/languageChoice.txt");
@@ -121,14 +165,10 @@ public class SettingActivity extends AppCompatActivity {
                 writeFile(langfile, choice.getBytes());
             }else{
                 //if user doesn't select the language
-                //Toast메시지를 띄운다
-                //Toast.makeText(LoadingActivity.this,"Please select the language",Toast.LENGTH_SHORT).show();
                 return;
             }
         }else{
             //Permission denied or no permission
-            //Toast메시지를 띄운다
-            //Toast.makeText(LoadingActivity.this,"Authorization Problem Occurred",Toast.LENGTH_SHORT).show();
             return;
         }
 
@@ -143,7 +183,6 @@ public class SettingActivity extends AppCompatActivity {
             deleteFile(file);
         }
 
-        finish();
     }
 
     /**

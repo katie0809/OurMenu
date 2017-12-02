@@ -44,9 +44,9 @@ public class LoadingActivity extends Activity {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_loading);
 
-        select_language = (Spinner) findViewById(R.id.lang_list);
+        select_language = (Spinner) findViewById(R.id.lang_list2);
         start_btn = (Button) findViewById(R.id.start_btn);
-        check_btn = (CheckBox) findViewById(R.id.checkBox);
+        check_btn = (CheckBox) findViewById(R.id.checkBox2);
 
         // 드롭다운 메뉴의 기본값은 Select Language
         items = new ArrayList<String>();
