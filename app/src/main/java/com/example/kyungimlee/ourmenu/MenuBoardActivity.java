@@ -101,6 +101,7 @@ public class MenuBoardActivity extends AppCompatActivity {
     public static final int WRITE_PERMISSIONS_REQUEST = 4;
     private static final int FROM_CROPPING = 0;
     private static final int FROM_SAVED = 1;
+    private boolean FILE_SAVED;
 
     //detected break type
     private static String DETECTED_BREAK;
@@ -116,9 +117,6 @@ public class MenuBoardActivity extends AppCompatActivity {
     private Bitmap original_bitmap;
     protected Bitmap cur_bitmap;
     private TextView loading_str;
-    private TextView translated_str;
-    private Button next_btn;
-    protected Canvas bit_canvas;
 
     private List<String> target_txt = new ArrayList<>();
     private List<List<GoogleCloudVisionV1Vertex> > paraVertices = new ArrayList<List<GoogleCloudVisionV1Vertex> >(); // Set of vertices of paragraph
@@ -139,6 +137,7 @@ public class MenuBoardActivity extends AppCompatActivity {
         //set image view
         main_view = (ImageView) findViewById(R.id.menu_img);
         loading_str = (TextView) findViewById(R.id.loading_str);
+        FILE_SAVED = false;
 
         //accept information from a previous activity
         Bundle uridata = getIntent().getExtras();
@@ -177,7 +176,8 @@ public class MenuBoardActivity extends AppCompatActivity {
 
                 try{
                     //convert uri to path
-                    //String path = uri_to_path(uri);
+                    //data_path is a path for "wordVertices" file
+                    //txt_path is a path for "target_txt" file
                     String data_path = "", txt_path="";
                     StringTokenizer st = new StringTokenizer(imagePath,".");
                     String token = st.nextToken();
@@ -440,6 +440,10 @@ public class MenuBoardActivity extends AppCompatActivity {
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
         getMenuInflater().inflate(R.menu.activity_menu_board, menu);
+
+        if(FILE_SAVED)
+            menu.findItem(R.id.action_save).setVisible(false);
+
         return super.onCreateOptionsMenu(menu);
     }
 
@@ -513,7 +517,8 @@ public class MenuBoardActivity extends AppCompatActivity {
                 bufferedWriter2.close();
 
                 //Show message
-                Toast.makeText(MenuBoardActivity.this, "Saved", Toast.LENGTH_LONG).show();
+                FILE_SAVED = true;
+                invalidateOptionsMenu();
                 loading_str.setText("File Saved");
 
             } catch (IOException e) {

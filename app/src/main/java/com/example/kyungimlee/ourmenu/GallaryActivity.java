@@ -26,6 +26,7 @@ import java.io.FileFilter;
 import java.io.FileInputStream;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.StringTokenizer;
 
 public class GallaryActivity extends AppCompatActivity {
 
@@ -65,11 +66,37 @@ public class GallaryActivity extends AppCompatActivity {
 
         for(int i = 0; i<50; i++){
             String _path = path + image_path.get(i % image_path.size());
+            StringTokenizer st = new StringTokenizer(_path,".");
+            String token = st.nextToken();
+            String txt_path = "", data_path="";
+            data_path = token + ".txt";
+            txt_path = token + "_.txt";
+
             if(thumbnailsselection[i]){
                 //image is checked to delete
-
+                File file = new File(_path);
+                File vertex_file = new File(data_path);
+                File txt_file = new File(txt_path);
+                //delete image
+                deleteFile(file);
+                //delete annotations
+                deleteFile(vertex_file);
+                deleteFile(txt_file);
             }
         }
+
+        image_path.clear();
+
+        for(File file : f.listFiles(new FileFilter() {
+            @Override
+            public boolean accept(File pathname) {
+                return pathname.toString().endsWith(".jpg");
+            }
+        })){
+            image_path.add(file.getName());
+        }
+        ImageAdapter imageAdapter = new ImageAdapter(this, image_path, path);
+        objGridView.setAdapter(imageAdapter);
 
         ACTIVATE = false;
         invalidateOptionsMenu();
@@ -226,6 +253,7 @@ public class GallaryActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.action_ok){
             //delete contents
             deleteContents();
+            thumbnailsselection = new boolean[50];
         }
         return super.onOptionsItemSelected(item);
     }
@@ -251,6 +279,22 @@ public class GallaryActivity extends AppCompatActivity {
         }
         return null;
     }
+
+    /**
+     * (dir/file) 삭제 하기
+     * @param file
+     */
+    private boolean deleteFile(File file){
+        boolean result;
+        if(file!=null&&file.exists()){
+            file.delete();
+            result = true;
+        }else{
+            result = false;
+        }
+        return result;
+    }
+
 
     class ViewHolder {
         ImageView imageview;
