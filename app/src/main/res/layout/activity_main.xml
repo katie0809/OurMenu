@@ -12,6 +12,7 @@
         android:orientation="vertical">
 
         <android.support.constraint.ConstraintLayout
+            android:id="@+id/top_view"
             android:layout_width="match_parent"
             android:layout_height="334dp"
             android:background="@drawable/background_top">
@@ -26,12 +27,15 @@
                 android:layout_marginTop="8dp"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
+                app:layout_constraintHorizontal_bias="0.503"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent"
+                app:layout_constraintVertical_bias="0.378"
                 app:srcCompat="@drawable/logo" />
         </android.support.constraint.ConstraintLayout>
 
         <android.support.constraint.ConstraintLayout
+            android:id="@+id/bottom_view"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginBottom="8dp"
@@ -44,15 +48,15 @@
 
             <Button
                 android:id="@+id/gallary_btn"
-                android:layout_width="57dp"
-                android:layout_height="71dp"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
                 android:layout_alignBaseline="@+id/camera_btn"
                 android:layout_alignBottom="@+id/camera_btn"
                 android:layout_alignStart="@+id/setting_btn"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="36dp"
-                android:background="@drawable/p_gallary_icn"
+                android:background="@drawable/p_gallary_icn2"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.231"
                 app:layout_constraintStart_toStartOf="parent"
@@ -60,8 +64,8 @@
 
             <Button
                 android:id="@+id/saved_btn"
-                android:layout_width="75dp"
-                android:layout_height="64dp"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
                 android:layout_alignBaseline="@+id/setting_btn"
                 android:layout_alignBottom="@+id/setting_btn"
                 android:layout_marginBottom="8dp"
@@ -69,24 +73,24 @@
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
                 android:layout_toEndOf="@+id/setting_btn"
-                android:background="@drawable/p_menu_icn"
+                android:background="@drawable/p_menu_icn2"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.722"
+                app:layout_constraintHorizontal_bias="0.713"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/camera_btn"
-                app:layout_constraintVertical_bias="0.21" />
+                app:layout_constraintVertical_bias="0.272" />
 
             <Button
                 android:id="@+id/camera_btn"
-                android:layout_width="57dp"
-                android:layout_height="71dp"
+                android:layout_width="70dp"
+                android:layout_height="70dp"
                 android:layout_above="@+id/saved_btn"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="36dp"
                 android:layout_toEndOf="@+id/gallary_btn"
-                android:background="@drawable/p_cam_icn"
+                android:background="@drawable/p_cam_icn2"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.712"
                 app:layout_constraintStart_toStartOf="parent"
@@ -94,7 +98,7 @@
 
             <Button
                 android:id="@+id/setting_btn"
-                android:layout_width="58dp"
+                android:layout_width="70dp"
                 android:layout_height="70dp"
                 android:layout_alignParentBottom="true"
                 android:layout_alignParentStart="true"
@@ -102,13 +106,13 @@
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
                 android:layout_marginTop="8dp"
-                android:background="@drawable/p_setting_icn"
+                android:background="@drawable/p_setting_icn2"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
                 app:layout_constraintHorizontal_bias="0.231"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/gallary_btn"
-                app:layout_constraintVertical_bias="0.062" />
+                app:layout_constraintVertical_bias="0.26999998" />
         </android.support.constraint.ConstraintLayout>
 
     </LinearLayout>

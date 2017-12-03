@@ -10,6 +10,7 @@ import android.os.Environment;
 import android.os.Handler;
 import android.provider.MediaStore;
 import android.support.annotation.NonNull;
+import android.support.constraint.ConstraintLayout;
 import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
@@ -49,7 +50,7 @@ public class MainActivity extends AppCompatActivity {
     private Button gallary_btn;
     private Button saved_btn;
     private Button setting_btn;
-    private Spinner select_language;
+    boolean FLAG;
 
     // 코드상에서 사용된 변수
     HashMap supported_lang = new HashMap();
@@ -69,8 +70,13 @@ public class MainActivity extends AppCompatActivity {
         gallary_btn = (Button) findViewById(R.id.gallary_btn);
         saved_btn = (Button) findViewById(R.id.saved_btn);
         setting_btn = (Button) findViewById(R.id.setting_btn);
-        select_language = (Spinner) findViewById(R.id.lang_list2);
         flag = (ImageView) findViewById(R.id.imageView2);
+        FLAG = true;
+
+        if(FLAG){
+            startActivity(new Intent(this, LogoActivity.class));
+            FLAG = false;
+        }
 
         //Set file name
         FILE_NAME = getDate() +"_menu.jpg";

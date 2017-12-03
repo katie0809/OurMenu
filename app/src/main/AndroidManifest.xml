@@ -14,7 +14,6 @@
         android:roundIcon="@mipmap/ic_launcher_round"
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
-
         <activity
             android:name=".MainActivity"
             android:theme="@style/AppTheme_notitle">
@@ -24,13 +23,14 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
-        <activity android:name=".MenuBoardActivity"
-            android:label="Menu"/>
+        <activity
+            android:name=".MenuBoardActivity"
+            android:label="Menu" />
         <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
         <activity android:name=".CroppingActivity" />
         <activity
             android:name=".LoadingActivity"
-            android:theme="@android:style/Theme.NoTitleBar.Fullscreen" />
+            android:theme="@style/AppTheme_notitle" />
         <activity
             android:name=".GallaryActivity"
             android:label="Saved Menu" />
@@ -38,7 +38,9 @@
         <activity
             android:name=".SettingActivity"
             android:theme="@style/AppTheme_notitle">
-
+        </activity>
+        <activity android:name=".LogoActivity"
+            android:theme="@style/AppTheme_notitle">
         </activity>
 
         <provider

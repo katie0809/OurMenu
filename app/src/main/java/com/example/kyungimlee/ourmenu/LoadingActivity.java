@@ -4,6 +4,7 @@ import android.Manifest;
 import android.app.Activity;
 import android.os.Bundle;
 import android.os.Environment;
+import android.support.v7.app.AppCompatActivity;
 import android.util.Log;
 import android.view.View;
 import android.widget.AdapterView;
@@ -23,7 +24,7 @@ import static android.content.ContentValues.TAG;
 
 //import android.widget.Toast;
 
-public class LoadingActivity extends Activity {
+public class LoadingActivity extends AppCompatActivity {
 
     private Spinner select_language;
     private Button start_btn;

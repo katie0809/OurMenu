@@ -17,7 +17,7 @@
         android:layout_marginEnd="8dp"
         android:layout_marginStart="8dp"
         android:layout_marginTop="8dp"
-        android:button="@drawable/chkbox_background"
+        android:background="@android:color/transparent"
         android:text="@string/checkbox"
         android:textColor="#000000"
         app:layout_constraintEnd_toEndOf="parent"
