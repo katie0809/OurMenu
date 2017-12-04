@@ -39,7 +39,6 @@
             android:layout_width="match_parent"
             android:layout_height="match_parent"
             android:layout_marginBottom="8dp"
-            android:layout_marginStart="8dp"
             android:backgroundTint="#ffffff"
             app:layout_constraintBottom_toBottomOf="parent"
             app:layout_constraintEnd_toEndOf="parent"
@@ -55,10 +54,10 @@
                 android:layout_alignStart="@+id/setting_btn"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="36dp"
+                android:layout_marginTop="64dp"
                 android:background="@drawable/p_gallary_icn2"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.231"
+                app:layout_constraintHorizontal_bias="0.25"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -76,10 +75,10 @@
                 android:background="@drawable/p_menu_icn2"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.713"
+                app:layout_constraintHorizontal_bias="0.75"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/camera_btn"
-                app:layout_constraintVertical_bias="0.272" />
+                app:layout_constraintVertical_bias="0.474" />
 
             <Button
                 android:id="@+id/camera_btn"
@@ -88,11 +87,11 @@
                 android:layout_above="@+id/saved_btn"
                 android:layout_marginEnd="8dp"
                 android:layout_marginStart="8dp"
-                android:layout_marginTop="36dp"
+                android:layout_marginTop="64dp"
                 android:layout_toEndOf="@+id/gallary_btn"
                 android:background="@drawable/p_cam_icn2"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.712"
+                app:layout_constraintHorizontal_bias="0.75"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toTopOf="parent" />
 
@@ -109,10 +108,10 @@
                 android:background="@drawable/p_setting_icn2"
                 app:layout_constraintBottom_toBottomOf="parent"
                 app:layout_constraintEnd_toEndOf="parent"
-                app:layout_constraintHorizontal_bias="0.231"
+                app:layout_constraintHorizontal_bias="0.25"
                 app:layout_constraintStart_toStartOf="parent"
                 app:layout_constraintTop_toBottomOf="@+id/gallary_btn"
-                app:layout_constraintVertical_bias="0.26999998" />
+                app:layout_constraintVertical_bias="0.474" />
         </android.support.constraint.ConstraintLayout>
 
     </LinearLayout>

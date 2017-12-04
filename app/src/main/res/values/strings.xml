@@ -4,7 +4,6 @@
     <string name="confirm_button">Confirm</string>
     <string name="checkbox">Do not show language chooser again</string>
     <string name="checkbox_explain">You could change laguage setting on Setting menu</string>
-    <string name="ocr_error">OCR failed. (1) Maybe there are too many characters in your menu. (2) change wifi connection. Some networks deny access to OCR</string>
 
     <string name="action_select">Pick</string>
     <string name="action_save">Save</string>
@@ -12,10 +11,11 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_ok">Ok</string>
 
-
     <string name="dialog_select_prompt">Choose a picture</string>
     <string name="dialog_select_camera">Camera</string>
     <string name="dialog_select_gallery">Gallery</string>
     <string name="image_picker_error">Something is wrong with that image. Pick a different one please.</string>
 
+    <string name="err_msg_nullVertex">OCR error. Some boundaries are not successfully detected. Please resize the picture</string>
+    <string name="err_msg_ocr">OCR failed. (1) Maybe there are too many characters in your menu. (2) Try change wifi connection. Some networks deny access to OCR</string>
 </resources>

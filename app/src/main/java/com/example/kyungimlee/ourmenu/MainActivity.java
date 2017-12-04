@@ -74,7 +74,7 @@ public class MainActivity extends AppCompatActivity {
         FLAG = true;
 
         if(FLAG){
-            startActivity(new Intent(this, LogoActivity.class));
+            //startActivity(new Intent(this, LogoActivity.class));
             FLAG = false;
         }
 

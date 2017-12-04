@@ -155,7 +155,7 @@ public class MenuBoardActivity extends AppCompatActivity {
 
         //save original bitmap
         try {
-            original_bitmap = scaleBitmapDown(MediaStore.Images.Media.getBitmap(getContentResolver(), uri), 800);
+            original_bitmap = scaleBitmapDown(MediaStore.Images.Media.getBitmap(getContentResolver(), uri), 600);
         } catch (IOException e) {
             e.printStackTrace();
         }
@@ -641,7 +641,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                         // Convert the bitmap to a JPEG
                         // Just in case it's a format that Android understands but Cloud Vision
                         ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
+                        bitmap.compress(Bitmap.CompressFormat.JPEG, 80, byteArrayOutputStream);
                         byte[] imageBytes = byteArrayOutputStream.toByteArray();
 
                         // Base64 encode the JPEG
@@ -673,13 +673,11 @@ public class MenuBoardActivity extends AppCompatActivity {
                 } catch (GoogleJsonResponseException e) {
                     Log.d(TAG, "failed to make API request because " + e.getContent());
                 } catch (IOException e) {
-                    Log.d(TAG, "failed to make API request because of other IOException " +
-                            e.getMessage());
+                    Log.d(TAG, "failed to make API request because of other IOException " + e.getMessage());
                 }
-
                 return null;
-
             }
+
             protected void onPostExecute(List<GoogleCloudVisionV1AnnotateImageResponse> result){
                 //When OCR is finished
                 loading_str.setText("OCR finished");
@@ -687,7 +685,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                     drawBoundary(result);
                 }
                 else{
-                    loading_str.setText(R.string.ocr_error);
+                    loading_str.setText(R.string.err_msg_ocr);
                     Toast.makeText(getApplicationContext(), "OCR failed, please try again", Toast.LENGTH_LONG).show();
                     return;
                 }
@@ -695,12 +693,46 @@ public class MenuBoardActivity extends AppCompatActivity {
                 //Make every word polygon
                 try{
                     for(int j = 0; j<wordVertices.size(); j++){
-                        int[] x = new int[4];
-                        int[] y = new int[4];
+                        Integer[] x = new Integer[4];
+                        Integer[] y = new Integer[4];
                         List<GoogleCloudVisionV1Vertex> vertex = wordVertices.get(j);
                         for(int i = 0; i<4; i++){
                             x[i] = vertex.get(i).getX();
                             y[i] = vertex.get(i).getY();
+                        }
+                        for(int i = 0; i<4; i++){
+                            if(x[i] == null){
+                                switch (i){
+                                    case 0:
+                                        x[i] = x[3];
+                                        break;
+                                    case 1:
+                                        x[i] = x[2];
+                                        break;
+                                    case 2:
+                                        x[i] = x[1];
+                                        break;
+                                    case 3:
+                                        x[i] = x[0];
+                                        break;
+                                }
+                            }
+                            if(y[i] == null){
+                                switch (i){
+                                    case 0:
+                                        y[i] = y[3];
+                                        break;
+                                    case 1:
+                                        y[i] = y[2];
+                                        break;
+                                    case 2:
+                                        y[i] = y[1];
+                                        break;
+                                    case 3:
+                                        y[i] = y[0];
+                                        break;
+                                }
+                            }
                         }
                         Polygon poly = Polygon.Builder().addVertex(new Point(x[0], y[0]))
                                 .addVertex(new Point(x[1], y[1]))
@@ -710,7 +742,9 @@ public class MenuBoardActivity extends AppCompatActivity {
                     }
                 }catch (IndexOutOfBoundsException e){
                     Log.d("wordVertices idx error", "loop failed because " + e.getMessage());
-                    Toast.makeText(getApplicationContext(), "Please try OCR again", Toast.LENGTH_LONG).show();
+                    loading_str.setText(R.string.err_msg_ocr);
+                }catch (NullPointerException e){
+                    loading_str.setText(R.string.err_msg_nullVertex);
                 }
                 int idx = 0, maxidx = 0;
                 Float maxVal = 0.0f;
@@ -825,7 +859,6 @@ public class MenuBoardActivity extends AppCompatActivity {
 
         boolean startFlag = false;
         int idx = 0;
-
         //drawing text
         Bitmap tempBitmap = Bitmap.createBitmap(cur_bitmap.getWidth(), cur_bitmap.getHeight(), Bitmap.Config.ARGB_8888);
         Canvas canvas = new Canvas(tempBitmap);
@@ -837,7 +870,7 @@ public class MenuBoardActivity extends AppCompatActivity {
         pen.setStrokeWidth(1);
         //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
         pen.setStrokeCap(Paint.Cap.BUTT);
-        pen.setStrokeJoin(Paint.Join.MITER);
+        pen.setStrokeJoin(Paint.Join.MITER);int i = 0;
 
         for(GoogleCloudVisionV1AnnotateImageResponse res : result){
             for(GoogleCloudVisionV1Page page : res.getFullTextAnnotation().getPages()){
@@ -856,6 +889,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                             //initialize word txt
                             String word_txt = "";
 
+                            System.out.print(i);i++;
                             //add words to paragraph
                             for(GoogleCloudVisionV1Symbol symbol : word.getSymbols()){
                                 word_txt += symbol.getText();
@@ -892,29 +926,67 @@ public class MenuBoardActivity extends AppCompatActivity {
         return Bitmap.createScaledBitmap(bitmap, resizedWidth, resizedHeight, false);
     }
 
-
-
-    //***************** Currently not used ****************************//
-
     public Path getRectPath(List<GoogleCloudVisionV1Vertex> vertices){
 
         List<Integer> pointsX = new ArrayList<>();
         List<Integer> pointsY = new ArrayList<>();
+        List<Integer> excpX = new ArrayList<>();
+        List<Integer> excpY = new ArrayList<>();
+
         Path path = new Path();
 
-        for (GoogleCloudVisionV1Vertex vertex : vertices){
-            pointsX.add(vertex.getX());
-            pointsY.add(vertex.getY());
-        }out.print("\n");
-
-        path.moveTo(pointsX.get(0), pointsY.get(0));
-        path.lineTo(pointsX.get(1), pointsY.get(1));
-        path.lineTo(pointsX.get(2), pointsY.get(2));
-        path.lineTo(pointsX.get(3), pointsY.get(3));
-        path.lineTo(pointsX.get(0), pointsY.get(0));
-
+        try {
+            for (GoogleCloudVisionV1Vertex vertex : vertices) {
+                pointsX.add(vertex.getX());
+                pointsY.add(vertex.getY());
+            }
+            for(int i = 0; i<4; i++){
+                if(pointsX.get(i) == null){
+                    switch (i){
+                        case 0:
+                            pointsX.set(i, pointsX.get(3));
+                            break;
+                        case 1:
+                            pointsX.set(i, pointsX.get(2));
+                            break;
+                        case 2:
+                            pointsX.set(i, pointsX.get(1));
+                            break;
+                        case 3:
+                            pointsX.set(i, pointsX.get(0));
+                            break;
+                    }
+                }
+                if(pointsY.get(i) == null){
+                    switch (i){
+                        case 0:
+                            pointsY.set(i, pointsY.get(3));
+                            break;
+                        case 1:
+                            pointsY.set(i, pointsY.get(2));
+                            break;
+                        case 2:
+                            pointsY.set(i, pointsY.get(1));
+                            break;
+                        case 3:
+                            pointsY.set(i, pointsY.get(0));
+                            break;
+                    }
+                }
+            }
+            path.moveTo(pointsX.get(0), pointsY.get(0));
+            path.lineTo(pointsX.get(1), pointsY.get(1));
+            path.lineTo(pointsX.get(2), pointsY.get(2));
+            path.lineTo(pointsX.get(3), pointsY.get(3));
+            path.lineTo(pointsX.get(0), pointsY.get(0));
+        }catch (NullPointerException e){
+            loading_str.setText(R.string.err_msg_nullVertex);
+        }
         return path;
     }
+
+
+    //***************** Currently not used ****************************//
 
     private void _drawBoundary(List<GoogleCloudVisionV1Vertex> vertex, int strokeWidth, int color) {
 
@@ -940,253 +1012,6 @@ public class MenuBoardActivity extends AppCompatActivity {
 
         canvas.drawPath(getRectPath(vertex), pen);
 
-    }
-    private void callParaRectCloudVision(final Bitmap bitmap) throws IOException{
-        loading_str.setText("uploading image");
-        //Do the work in an async task
-        new AsyncTask<Object, Void, List<GoogleCloudVisionV1AnnotateImageResponse> >(){
-            @Override
-            protected List<GoogleCloudVisionV1AnnotateImageResponse> doInBackground(Object... objects) {
-
-                HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
-                JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-
-                //Access Google Translation
-                Translate translate;
-                translate = new Translate.Builder(httpTransport, jsonFactory, null)
-                        .setGoogleClientRequestInitializer(new TranslateRequestInitializer(API_KEY))
-                        .setApplicationName("OurMenu").build();
-
-                //Access Google Cloud Vision
-                try {
-                    VisionRequestInitializer requestInitializer =
-                            new VisionRequestInitializer(API_KEY) {
-                                /**
-                                 * We override this so we can inject important identifying fields into the HTTP
-                                 * headers. This enables use of a restricted cloud platform API key.
-                                 */
-                                @Override
-                                protected void initializeVisionRequest(VisionRequest<?> visionRequest)
-                                        throws IOException {
-                                    super.initializeVisionRequest(visionRequest);
-
-                                    String packageName = getPackageName();
-                                    visionRequest.getRequestHeaders().set(ANDROID_PACKAGE_HEADER, packageName);
-
-                                    String sig = PackageManagerUtils.getSignature(getPackageManager(), packageName);
-
-                                    visionRequest.getRequestHeaders().set(ANDROID_CERT_HEADER, sig);
-                                }
-                            };
-
-                    Vision.Builder builder = new Vision.Builder(httpTransport, jsonFactory, null);
-                    builder.setVisionRequestInitializer(requestInitializer);
-
-                    Vision vision = builder.build();
-
-                    GoogleCloudVisionV1BatchAnnotateImagesRequest batchAnnotateImagesRequest =
-                            new GoogleCloudVisionV1BatchAnnotateImagesRequest();
-
-                    batchAnnotateImagesRequest.setRequests(new ArrayList<GoogleCloudVisionV1AnnotateImageRequest>() {{
-                        GoogleCloudVisionV1AnnotateImageRequest annotateImageRequest = new GoogleCloudVisionV1AnnotateImageRequest();
-
-                        // Add the image
-                        GoogleCloudVisionV1Image base64EncodedImage = new GoogleCloudVisionV1Image();
-                        // Convert the bitmap to a JPEG
-                        // Just in case it's a format that Android understands but Cloud Vision
-                        ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-                        bitmap.compress(Bitmap.CompressFormat.JPEG, 90, byteArrayOutputStream);
-                        byte[] imageBytes = byteArrayOutputStream.toByteArray();
-
-                        // Base64 encode the JPEG
-                        base64EncodedImage.encodeContent(imageBytes);
-                        annotateImageRequest.setImage(base64EncodedImage);
-
-                        // add the features we want
-                        annotateImageRequest.setFeatures(new ArrayList<GoogleCloudVisionV1Feature>() {{
-                            GoogleCloudVisionV1Feature textDetection = new GoogleCloudVisionV1Feature();
-                            textDetection.setType("DOCUMENT_TEXT_DETECTION");
-                            add(textDetection);
-                        }});
-
-                        // Add the list of one thing to the request
-                        add(annotateImageRequest);
-                    }});
-
-                    Vision.Images.Annotate annotateRequest =
-                            vision.images().annotate(batchAnnotateImagesRequest);
-                    // Due to a bug: requests to Vision API containing large images fail when GZipped.
-                    annotateRequest.setDisableGZipContent(true);
-                    Log.d(TAG, "created Cloud Vision request object, sending request");
-
-                    GoogleCloudVisionV1BatchAnnotateImagesResponse response = annotateRequest.execute();
-                    List<GoogleCloudVisionV1AnnotateImageResponse> responses = response.getResponses();
-
-                    boolean startFlag = false;
-
-                    Canvas canvas = new Canvas(bitmap);
-                    canvas.drawARGB(175,0,0,0);
-                    Paint pen = new Paint();
-                    pen.setStyle(Paint.Style.STROKE);
-                    pen.setStrokeWidth(3);
-                    //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
-                    pen.setColor(Color.YELLOW);
-                    pen.setStrokeCap(Paint.Cap.BUTT);
-                    pen.setStrokeJoin(Paint.Join.MITER);
-                    List<String> target_list = new ArrayList<>();
-                    List<TranslationsResource> translationsResponseList = new ArrayList<>();
-                    List<List<GoogleCloudVisionV1Vertex> > vertex = new ArrayList<List<GoogleCloudVisionV1Vertex>>();
-                    boolean start = false;
-/*
-                    for(GoogleCloudVisionV1AnnotateImageResponse res : responses){
-                        for(GoogleCloudVisionV1EntityAnnotation entitiy : res.getTextAnnotations()){
-                            if(!start){
-                                start = true;
-                                continue;
-                            }
-                            target_list.add(entitiy.getDescription());
-                            vertex.add(entitiy.getBoundingPoly().getVertices());
-                        }
-                    }
-*/
-                    for(GoogleCloudVisionV1AnnotateImageResponse res : responses){
-                        for(GoogleCloudVisionV1Page page : res.getFullTextAnnotation().getPages()){
-                            for(GoogleCloudVisionV1Block block : page.getBlocks()){
-                                for(GoogleCloudVisionV1Paragraph paragraph : block.getParagraphs()){
-                                    vertex.add(paragraph.getBoundingBox().getVertices());
-                                    String parastr = "";
-                                    for(GoogleCloudVisionV1Word word : paragraph.getWords()){
-                                        String wordstr = "";
-                                        for(GoogleCloudVisionV1Symbol symbol : word.getSymbols()){
-                                            wordstr += symbol.getText();
-                                            if(symbol.getProperty().getDetectedBreak() != null){
-                                                DETECTED_BREAK = symbol.getProperty().getDetectedBreak().getType();
-                                                System.out.printf("word %s break %s\n", wordstr, symbol.getProperty().getDetectedBreak().getType());
-                                                switch (DETECTED_BREAK){
-                                                    case SPACE:
-                                                        wordstr += " ";
-                                                        break;
-                                                    case SURE_SPACE:
-                                                        wordstr += "        ";
-                                                        break;
-                                                    case LINE_BREAK:
-                                                        wordstr += " \n ";
-                                                        break;
-                                                    case EOL_SURE_SPACE:
-                                                        wordstr += " \n ";
-                                                        break;
-                                                }
-                                            }
-                                        }
-                                        parastr += wordstr;
-                                    }
-                                    target_list.add(parastr);
-                                }
-                            }
-                        }
-                    }
-
-                    //execute translation for a paragraph
-                    try {
-                        Translate.Translations.List translationreq = translate.translations().list(target_list, choice);
-                        TranslationsListResponse translationsResponse = translationreq.execute();
-                        translationsResponseList = translationsResponse.getTranslations();
-                    } catch (IOException e) {
-                        e.printStackTrace();
-                    }int idx = 0;
-                    for(TranslationsResource ress : translationsResponseList){
-                        out.printf("Translated : %s\n", ress.getTranslatedText());
-
-                        //get vertices of translated text
-                        List<GoogleCloudVisionV1Vertex> vertices = vertex.get(idx);
-                        pen.setTextSize((float) 40);
-                        //pen.setTextSize((int)_getTextSize(vertices, ress.getTranslatedText()));
-/*
-                        //Using multiline drawing
-                        pen.setTextSize((float) 40);
-                        String paragraph = ress.getTranslatedText();
-                        int x= vertices.get(0).getX();
-                        int y= vertices.get(0).getY();
-                        for(String line : paragraph.split("\n")){
-                            canvas.drawText(line, x, y, pen);
-                            y += pen.ascent() + pen.descent();
-                        }
-
-*/
-                        //Using Static Layout
-                        //Draw translation in the bounding box
-                        RectF rect = new RectF(vertices.get(0).getX().floatValue(),
-                                vertices.get(0).getY().floatValue(),
-                                vertices.get(2).getX().floatValue(),
-                                vertices.get(2).getY().floatValue());
-
-
-                        StaticLayout sl = new StaticLayout(ress.getTranslatedText(), new TextPaint(pen), (int)rect.width(), Layout.Alignment.ALIGN_NORMAL, 1, 1, false);
-
-                        canvas.save();
-                        canvas.translate(rect.left, rect.top);
-                        sl.draw(canvas);
-                        canvas.restore();
-
-                        //canvas.drawTextOnPath(translationsResponseList.get(idx).getTranslatedText(), getPath(vertices),0,0, pen);
-                        idx++;
-                    }
-
-
-                    return responses;
-
-                } catch (GoogleJsonResponseException e) {
-                    Log.d(TAG, "failed to make API request because " + e.getContent());
-                } catch (IOException e) {
-                    Log.d(TAG, "failed to make API request because of other IOException " +
-                            e.getMessage());
-                }
-
-                return null;
-
-            }
-            protected void onPostExecute(List<GoogleCloudVisionV1AnnotateImageResponse> result){
-                loading_str.setText("OCR finished");
-                boolean startFlag = false;
-                int idx = 0;
-/*
-                //drawing text
-                Canvas canvas = new Canvas(bitmap);
-                canvas.drawARGB(175,0,0,0);
-                Paint pen = new Paint();
-                pen.setStyle(Paint.Style.STROKE);
-                pen.setStrokeWidth(3);
-                //pen.setTextSize((int)getTextSize(result.get(1).getTextAnnotations().get(1).getBoundingPoly()));
-                pen.setColor(Color.YELLOW);
-                pen.setStrokeCap(Paint.Cap.BUTT);
-                pen.setStrokeJoin(Paint.Join.MITER);
-
-
-                for (GoogleCloudVisionV1AnnotateImageResponse res : result) {
-
-                    // For full list of available annotations, see http://g.co/cloud/vision/docs
-                    for (GoogleCloudVisionV1EntityAnnotation annotation : res.getTextAnnotations()) {
-                        if(!startFlag){
-                            startFlag = true;
-                            continue;
-                        }
-                        if(idx >= translated_txt.size()) idx--;
-                        String str = translated_txt.get(idx);
-
-
-                        List<String> target_list = new ArrayList<>();
-                        target_list.add(annotation.getDescription());
-
-                        //Get full translated text
-                        List<GoogleCloudVisionV1Vertex> vertex = annotation.getBoundingPoly().getVertices();
-                        pen.setTextSize((int)getTextSize(vertex) + 5);
-                        out.printf("Text: %s\nPosition : ", annotation.getDescription());
-                        canvas.drawTextOnPath(str, getPath(vertex),0,0, pen);
-                        idx++;
-                    }
-                }*/
-            }
-        }.execute();
     }
     private void callBackupCloudVision(final Bitmap bitmap) throws IOException{
         loading_str.setText("uploading image");
