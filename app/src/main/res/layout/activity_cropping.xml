@@ -14,5 +14,4 @@
         android:scaleType="centerInside"
         android:background="@drawable/texture" />
 
-
 </android.support.constraint.ConstraintLayout>

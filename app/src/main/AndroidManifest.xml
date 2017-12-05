@@ -23,7 +23,9 @@
             android:name=".MenuBoardActivity"
             android:label="Menu" />
         <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
-        <activity android:name=".CroppingActivity" />
+        <activity
+            android:name=".CroppingActivity"
+            android:label=""/>
         <activity
             android:name=".LoadingActivity"
             android:theme="@style/AppTheme_notitle" />

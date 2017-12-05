@@ -1,8 +1,11 @@
 package com.example.kyungimlee.ourmenu;
 
 
+import android.content.Context;
 import android.content.Intent;
+import android.database.Cursor;
 import android.graphics.Bitmap;
+import android.graphics.Matrix;
 import android.net.Uri;
 import android.os.Bundle;
 import android.os.Environment;
@@ -16,6 +19,7 @@ import android.widget.Toast;
 
 import com.soundcloud.android.crop.Crop;
 
+import java.io.ByteArrayOutputStream;
 import java.io.File;
 import java.io.IOException;
 
@@ -23,6 +27,7 @@ public class CroppingActivity extends AppCompatActivity {
 
     private ImageView result_view;
     Bitmap bitmap;
+    Uri uri;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
@@ -38,7 +43,7 @@ public class CroppingActivity extends AppCompatActivity {
             return;
         }
         String struri = uridata.getString("imageUri");
-        Uri uri = Uri.parse(struri);
+        uri = Uri.parse(struri);
 
         try {
             bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
@@ -46,26 +51,8 @@ public class CroppingActivity extends AppCompatActivity {
             e.printStackTrace();
         }
 
-        beginCrop(uri);
-
-    }/*
-    public void uploadImage(Uri uri) {
-        if (uri != null) {
-            try {
-                // scale the image to save on bandwidth
-                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
-                result_view.setImageBitmap(bitmap);
-
-
-            } catch (IOException e) {
-                Log.d("Cropping", "Image picking failed because " + e.getMessage());
-                Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
-            }
-        } else {
-            Log.d("Cropping", "Image picker gave us a null image.");
-            Toast.makeText(this, R.string.image_picker_error, Toast.LENGTH_LONG).show();
-        }
-    }*/
+        result_view.setImageBitmap(bitmap);
+    }
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
@@ -78,15 +65,46 @@ public class CroppingActivity extends AppCompatActivity {
         if (item.getItemId() == R.id.action_select) {
             result_view.setImageDrawable(null);
             Crop.pickImage(this);
-            return true;
+        }else if(item.getItemId() == R.id.action_rotate){
+
+            Matrix rotateMatrix = new Matrix();
+            rotateMatrix.postRotate(90); //-360~360
+
+
+            Bitmap sideInversionImg = Bitmap.createBitmap(bitmap, 0, 0,
+                    bitmap.getWidth(), bitmap.getHeight(), rotateMatrix, false);
+
+            bitmap = sideInversionImg.copy(Bitmap.Config.ARGB_8888, true);
+            result_view.setImageBitmap(bitmap);
+
+        }else if(item.getItemId() == R.id.action_crop){
+
+            uri = getImageUri(getApplicationContext(), bitmap);
+            beginCrop(uri);
         }
         return super.onOptionsItemSelected(item);
+    }
+
+    public Uri getImageUri(Context inContext, Bitmap inImage) {
+        ByteArrayOutputStream bytes = new ByteArrayOutputStream();
+        inImage.compress(Bitmap.CompressFormat.JPEG, 100, bytes);
+        String path = MediaStore.Images.Media.insertImage(inContext.getContentResolver(), inImage, "Title", null);
+        return Uri.parse(path);
     }
 
     @Override
     protected void onActivityResult(int requestCode, int resultCode, Intent result) {
         if (requestCode == Crop.REQUEST_PICK && resultCode == RESULT_OK) {
-            beginCrop(result.getData());
+
+            uri = result.getData();
+            try {
+                bitmap = MediaStore.Images.Media.getBitmap(getContentResolver(), uri);
+            } catch (IOException e) {
+                e.printStackTrace();
+            }
+            result_view.setImageBitmap(bitmap);
+
+
         } else if (requestCode == Crop.REQUEST_CROP) {
             handleCrop(resultCode, result);
         }
@@ -99,27 +117,6 @@ public class CroppingActivity extends AppCompatActivity {
 
     private void handleCrop(int resultCode, Intent result) {
         if (resultCode == RESULT_OK) {
-            //result_view.setImageURI(Crop.getOutput(result));
-            //save cropped image
-            /*
-            ByteArrayOutputStream byteArrayOutputStream = new ByteArrayOutputStream();
-            bitmap.compress(Bitmap.CompressFormat.JPEG, 100, byteArrayOutputStream);
-            byte[] imageBytes = byteArrayOutputStream.toByteArray();
-
-            //Save image
-            String date = getDate();
-            File file = new File(getExternalPath()+"/OurMenu/res/pictures/cropped_" + date + ".jpg");
-            FileOutputStream fileOutput = null;
-            try {
-                fileOutput = new FileOutputStream(file);
-                fileOutput.write(imageBytes);
-                fileOutput.close();
-            } catch (FileNotFoundException e) {
-                e.printStackTrace();
-            } catch (IOException e) {
-                e.printStackTrace();
-            }*/
-
             //Start menuboard activity
             Intent i = new Intent(this, MenuBoardActivity.class);
 
@@ -145,6 +142,15 @@ public class CroppingActivity extends AppCompatActivity {
         }
 
         return sdPath;
+    }
+
+    public String getPath(Uri uri) {
+        String[] projection = { MediaStore.Images.Media.DATA };
+        Cursor cursor = managedQuery(uri, projection, null, null, null);
+        int column_index = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA);
+        cursor.moveToFirst();
+        return cursor.getString(column_index);
+
     }
 
 }
