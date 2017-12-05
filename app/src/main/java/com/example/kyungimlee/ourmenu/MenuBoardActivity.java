@@ -2,6 +2,7 @@ package com.example.kyungimlee.ourmenu;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
+import android.app.ProgressDialog;
 import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
@@ -117,6 +118,7 @@ public class MenuBoardActivity extends AppCompatActivity {
     private Bitmap original_bitmap;
     protected Bitmap cur_bitmap;
     private TextView loading_str;
+    private ProgressDialog dialog;
 
     private List<String> target_txt = new ArrayList<>();
     private List<List<GoogleCloudVisionV1Vertex> > paraVertices = new ArrayList<List<GoogleCloudVisionV1Vertex> >(); // Set of vertices of paragraph
@@ -171,7 +173,6 @@ public class MenuBoardActivity extends AppCompatActivity {
             case FROM_SAVED:
 
                 //When image is loaded
-                loading_str.setText("Image loaded");
                 String imagePath = uridata.getString("imagePath");
 
                 try{
@@ -200,7 +201,10 @@ public class MenuBoardActivity extends AppCompatActivity {
                         while(stt.hasMoreTokens()){
                             String vertice = "";
                             vertice = stt.nextToken();
-                            queue.add(Integer.parseInt(vertice));
+                            if(vertice.isEmpty()){
+                                continue;
+                            }else
+                                queue.add(Integer.parseInt(vertice));
                         }
                         read = "";
                     }
@@ -248,14 +252,15 @@ public class MenuBoardActivity extends AppCompatActivity {
                         wordPolygons.add(poly);
                     }
 
-                    loading_str.setText("file loading finished");
+                    loading_str.setText(R.string.msg_img_load);
 
 
-                }catch (IndexOutOfBoundsException e){
+                } catch (IndexOutOfBoundsException e){
                     Log.d("wordVertices idx error", "loop failed because " + e.getMessage());
-                    Toast.makeText(getApplicationContext(), "Please try OCR again", Toast.LENGTH_LONG).show();
+                    loading_str.setText(R.string.err_msg_ocr);
                 } catch (FileNotFoundException e) {
                     e.printStackTrace();
+                    loading_str.setText(R.string.err_msg_null_file);
                 } catch (IOException e) {
                     e.printStackTrace();
                 }
@@ -389,6 +394,9 @@ public class MenuBoardActivity extends AppCompatActivity {
         return;
     }
 
+    /* --------------------------------------
+        Start ResultActivity
+    -------------------------------------- */
     private void startResultActivity(String str) {
         Intent i = new Intent(this, ResultActivity.class);
         i.putExtra("selectedLang", detected_lang);
@@ -406,7 +414,7 @@ public class MenuBoardActivity extends AppCompatActivity {
         }else{
             //if user didn's select the language
             //Show message
-            Toast.makeText(MenuBoardActivity.this, "No lanugage chose. Use korean as a default language", Toast.LENGTH_SHORT).show();
+            Toast.makeText(MenuBoardActivity.this, R.string.err_msg_null_lang, Toast.LENGTH_SHORT).show();
             choice = "ko";
         }
         return;
@@ -477,7 +485,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                 ActivityCompat.requestPermissions(this,new String[]{Manifest.permission.WRITE_EXTERNAL_STORAGE},0);
                 //Show message
                 //Toast.makeText(MenuBoardActivity.this, "Access denied", Toast.LENGTH_SHORT).show();
-                loading_str.setText("Permission denied for writing storage");
+                loading_str.setText(R.string.err_msg_permission);
             }
 
             //Show message
@@ -519,7 +527,7 @@ public class MenuBoardActivity extends AppCompatActivity {
                 //Show message
                 FILE_SAVED = true;
                 invalidateOptionsMenu();
-                loading_str.setText("File Saved");
+                loading_str.setText(R.string.msg_file_save);
 
             } catch (IOException e) {
                 //Show message
@@ -592,16 +600,22 @@ public class MenuBoardActivity extends AppCompatActivity {
         //Do the work in an async task
         new AsyncTask<Object, Void, List<GoogleCloudVisionV1AnnotateImageResponse> >(){
             @Override
+            protected void onPreExecute() {
+                dialog= new ProgressDialog(MenuBoardActivity.this); //ProgressDialog 객체 생성
+                dialog.setTitle("Progress");                   //ProgressDialog 제목
+                dialog.setMessage("Loading.....");             //ProgressDialog 메세지
+                dialog.setProgressStyle(ProgressDialog.STYLE_SPINNER); //막대형태의 ProgressDialog 스타일 설정
+                dialog.setCanceledOnTouchOutside(false); //ProgressDialog가 진행되는 동안 dialog의 바깥쪽을 눌러 종료하는 것을 금지
+
+                dialog.show(); //ProgressDialog 보여주기
+                super.onPreExecute();
+            }
+
+            @Override
             protected List<GoogleCloudVisionV1AnnotateImageResponse> doInBackground(Object... objects) {
 
                 HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
                 JsonFactory jsonFactory = GsonFactory.getDefaultInstance();
-
-                //Access Google Translation
-                Translate translate;
-                translate = new Translate.Builder(httpTransport, jsonFactory, null)
-                        .setGoogleClientRequestInitializer(new TranslateRequestInitializer(API_KEY))
-                        .setApplicationName("OurMenu").build();
 
                 //Access Google Cloud Vision
                 try {
@@ -681,6 +695,7 @@ public class MenuBoardActivity extends AppCompatActivity {
             protected void onPostExecute(List<GoogleCloudVisionV1AnnotateImageResponse> result){
                 //When OCR is finished
                 loading_str.setText("OCR finished");
+                dialog.dismiss();
                 if(result != null) {
                     drawBoundary(result);
                 }

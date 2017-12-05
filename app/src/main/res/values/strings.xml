@@ -11,11 +11,16 @@
     <string name="action_cancel">Cancel</string>
     <string name="action_ok">Ok</string>
 
+    <string name="msg_file_save">File Saved</string>
+    <string name="msg_img_load">Image loaded</string>
     <string name="dialog_select_prompt">Choose a picture</string>
     <string name="dialog_select_camera">Camera</string>
     <string name="dialog_select_gallery">Gallery</string>
     <string name="image_picker_error">Something is wrong with that image. Pick a different one please.</string>
 
-    <string name="err_msg_nullVertex">OCR error. Some boundaries are not successfully detected. Please resize the picture</string>
+    <string name="err_msg_null_file">No datafile found</string>
+    <string name="err_msg_null_lang">No language chose.</string>
+    <string name="err_msg_permission">Permission denied for writing external storage</string>
+    <string name="err_msg_nullVertex">OCR error. Some words are not successfully detected. Please resize the picture</string>
     <string name="err_msg_ocr">OCR failed. (1) Maybe there are too many characters in your menu. (2) Try change wifi connection. Some networks deny access to OCR</string>
 </resources>

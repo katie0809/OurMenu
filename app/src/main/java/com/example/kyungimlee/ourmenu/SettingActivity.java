@@ -13,14 +13,22 @@ import android.os.Bundle;
         import android.widget.Spinner;
         import android.widget.Toast;
 
-        import java.io.File;
+import java.io.BufferedReader;
+import java.io.File;
         import java.io.FileInputStream;
         import java.io.FileNotFoundException;
         import java.io.FileOutputStream;
-        import java.io.IOException;
+import java.io.FileReader;
+import java.io.IOException;
         import java.util.ArrayList;
         import java.util.HashMap;
-        import static android.content.ContentValues.TAG;
+import java.util.Iterator;
+import java.util.List;
+import java.util.Map;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
+
+import static android.content.ContentValues.TAG;
 
 //import android.widget.Toast;
 
@@ -47,49 +55,43 @@ public class SettingActivity extends AppCompatActivity {
 
         // 드롭다운 메뉴의 기본값은 Select Language
         items = new ArrayList<String>();
+        items.add("Select Language");
+
+        readLangFile();
 
         // 언어명 저장된 배열리스트와 GUI 컴포넌트 spinner 연결해준다
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this, android.R.layout.simple_spinner_item, items
         );
-        items.add("한국어");
-        items.add("English");
-        items.add("中文");
-        items.add("日本語");
-        items.add("española");
 
-        supported_lang.put("한국어", "ko");
-        supported_lang.put("English", "en");
-        supported_lang.put("中文", "zh");
-        supported_lang.put("日本語", "ja");
-        supported_lang.put("española", "es");
+        Map<String, String> ordered_map = new TreeMap<>();
+        ordered_map.putAll(supported_lang);
+        Iterator<String> keys = ordered_map.keySet().iterator();
+        while(keys.hasNext()){
+            String key = keys.next();
+            items.add(key);
+        }
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         select_language.setAdapter(adapter);
         getChoice();
 
         // 사용자가 선택했던 언어를 default로
-        int tmp = 0;
-        for(int i = 0; i<5; i++){
-            if(choice.compareTo(supported_lang.get(items.get(i).toString()).toString()) == 0){
+        int tmp = 0, i = 1;
+        Iterator<String> it = ordered_map.keySet().iterator();
+        while(it.hasNext()){
+            String item = items.get(i);
+            Object obj = supported_lang.get(item);
+            if(obj == null)
+                continue;
+            String langName = obj.toString();
+            if(langName.compareTo(choice) == 0){
                 tmp = i;
                 break;
             }
+            i++;
         }
         select_language.setSelection(tmp);
-
-        // 사용자가 번역 원하는 언어 택한경우
-        select_language.setOnItemSelectedListener(new AdapterView.OnItemSelectedListener() {
-            @Override
-            public void onItemSelected(AdapterView<?> adapterView, View view, int position, long l) {
-                // 선택된 메뉴아이템을 Toast메시지로 띄운다
-                //Toast.makeText(LoadingActivity.this,"Selected Language : "+select_language.getItemAtPosition(position),Toast.LENGTH_SHORT).show();
-            }
-
-            @Override
-            public void onNothingSelected(AdapterView<?> adapterView) {
-            }
-        });
 
         File file = new File(getExternalPath()+"/OurMenu/setting/languageFixed.txt");
         if(isFileExist(file)){
@@ -109,6 +111,37 @@ public class SettingActivity extends AppCompatActivity {
 
     }
 
+    private void readLangFile() {
+
+        try {
+            String data_path = getExternalPath() + "OurMenu/setting/languageList.txt";
+            File f = new File(data_path);
+            FileReader fr = null;
+            BufferedReader br = null;
+
+            fr = new FileReader(f);
+            br = new BufferedReader(fr);
+            String read = "";
+            while((read = br.readLine()) != null){
+                StringTokenizer stt = new StringTokenizer(read, "\t");
+                List<String> words = new ArrayList<>();
+                while(stt.hasMoreTokens()){
+                    String word = "";
+                    word = stt.nextToken();
+                    words.add(word);
+                }
+                supported_lang.put(words.get(0), words.get(1));
+                read = "";
+            }
+            fr.close();
+            br.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
     /**
      * 파일 읽어 오기
      * @param file
@@ -150,19 +183,16 @@ public class SettingActivity extends AppCompatActivity {
     public void startApp(){
         //Intent i = new Intent(this, MainActivity.class);
         File setting = null, langfile = null;
-        choice = supported_lang.get(select_language.getSelectedItem().toString()).toString();
         setting = makeDirectory(getExternalPath()+"/OurMenu/setting/");
 
         //Ask for External Storage Writing Permission
         if(PermissionUtils.requestPermission(this, WRITE_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)){
-            //Save image
-
             //Make file languageChoice.txt on OurMenu/setting
             langfile = makeFile(setting, getExternalPath()+"/OurMenu/setting/languageChoice.txt");
 
             //write user language choice
             if(choice != null) {
-                writeFile(langfile, choice.getBytes());
+                writeFile(langfile, supported_lang.get(select_language.getSelectedItem().toString()).toString().getBytes());
             }else{
                 //if user doesn't select the language
                 return;

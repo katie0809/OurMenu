@@ -13,12 +13,21 @@ import android.widget.Button;
 import android.widget.CheckBox;
 import android.widget.Spinner;
 
+import java.io.BufferedReader;
 import java.io.File;
 import java.io.FileNotFoundException;
 import java.io.FileOutputStream;
+import java.io.FileReader;
 import java.io.IOException;
 import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.Iterator;
+import java.util.LinkedList;
+import java.util.List;
+import java.util.Map;
+import java.util.Queue;
+import java.util.StringTokenizer;
+import java.util.TreeMap;
 
 import static android.content.ContentValues.TAG;
 
@@ -49,6 +58,10 @@ public class LoadingActivity extends AppCompatActivity {
         start_btn = (Button) findViewById(R.id.start_btn);
         check_btn = (CheckBox) findViewById(R.id.checkBox2);
 
+        makeDefaultDir();
+        makeLangFile();
+        readLangFile();
+
         // 드롭다운 메뉴의 기본값은 Select Language
         items = new ArrayList<String>();
         items.add("Select Language");
@@ -57,17 +70,14 @@ public class LoadingActivity extends AppCompatActivity {
         ArrayAdapter<String> adapter = new ArrayAdapter<String>(
                 this, android.R.layout.simple_spinner_item, items
         );
-        items.add("한국어");
-        items.add("English");
-        items.add("中文");
-        items.add("日本語");
-        items.add("española");
 
-        supported_lang.put("한국어", "ko");
-        supported_lang.put("English", "en");
-        supported_lang.put("中文", "zh");
-        supported_lang.put("日本語", "ja");
-        supported_lang.put("española", "es");
+        Map<String, String> ordered_map = new TreeMap<>();
+        ordered_map.putAll(supported_lang);
+        Iterator<String> keys = ordered_map.keySet().iterator();
+        while(keys.hasNext()){
+            String key = keys.next();
+            items.add(key);
+        }
 
         adapter.setDropDownViewResource(android.R.layout.simple_spinner_dropdown_item);
         select_language.setAdapter(adapter);
@@ -89,30 +99,192 @@ public class LoadingActivity extends AppCompatActivity {
         start_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                if((String)select_language.getSelectedItem().toString() != "Select Language")
+                if(select_language.getSelectedItem().toString().compareTo("Select Language") != 0 )
                     choice = supported_lang.get(select_language.getSelectedItem().toString()).toString();
                 startApp();
             }
         });
 
     }
-    public void startApp(){
-        //Intent i = new Intent(this, MainActivity.class);
-        File setting = null, langfile = null;
 
-        //i.putExtra("langChoice", choice);
+    private void readLangFile() {
 
-        //Ask for External Storage Writing Permission
+        try {
+            String data_path = getExternalPath() + "OurMenu/setting/languageList.txt";
+            File f = new File(data_path);
+            FileReader fr = null;
+            BufferedReader br = null;
+
+            fr = new FileReader(f);
+            br = new BufferedReader(fr);
+            String read = "";
+            while((read = br.readLine()) != null){
+                StringTokenizer stt = new StringTokenizer(read, "\t");
+                List<String> words = new ArrayList<>();
+                while(stt.hasMoreTokens()){
+                    String word = "";
+                    word = stt.nextToken();
+                    words.add(word);
+                }
+                supported_lang.put(words.get(0), words.get(1));
+                read = "";
+            }
+            fr.close();
+            br.close();
+
+        } catch (FileNotFoundException e) {
+            e.printStackTrace();
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void makeDefaultDir() {
+
         if(PermissionUtils.requestPermission(this, WRITE_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)){
             //Save image
             //Make folder OurMenu, OurMenu/res/annotations, OurMenu/res/pictures, OurMenu/setting
             makeDirectory(getExternalPath()+"/OurMenu/");
-            setting = makeDirectory(getExternalPath()+"/OurMenu/setting/");
+            makeDirectory(getExternalPath()+"/OurMenu/setting/");
             makeDirectory(getExternalPath()+"/OurMenu/res/");
             makeDirectory(getExternalPath()+"/OurMenu/res/pictures/");
             makeDirectory(getExternalPath()+"/OurMenu/res/annotations/");
+        }else{
+            //Permission denied or no permission
+            //Toast메시지를 띄운다
+            //Toast.makeText(LoadingActivity.this,"Authorization Problem Occurred",Toast.LENGTH_SHORT).show();
+            return;
+        }
+    }
+
+    private void makeLangFile() {
+
+        File setting = null, langfile = null;
+
+        if(PermissionUtils.requestPermission(this, WRITE_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)) {
+
+            setting = makeDirectory(getExternalPath()+"OurMenu/setting/");
+            langfile = makeFile(setting, getExternalPath()+"OurMenu/setting/languageList.txt");
+
+            if(!langfile.exists()){
+
+                String langList = "Afrikaans\taf\n" +
+                        "Albanian\tsq\n" +
+                        "Amharic\tam\n" +
+                        "Arabic\tar\n" +
+                        "Armenian\thy\n" +
+                        "Azeerbaijani\taz\n" +
+                        "Basque\teu\n" +
+                        "Belarusian\tbe\n" +
+                        "Bengali\tbn\n" +
+                        "Bosnian\tbs\n" +
+                        "Bulgarian\tbg\n" +
+                        "Catalan\tca\n" +
+                        "Cebuano\tceb\n" +
+                        "Chinese (Simplified)\tzh-CN\n" +
+                        "Chinese (Traditional)\tzh-TW\n" +
+                        "Corsican\tco\n" +
+                        "Croatian\thr\n" +
+                        "Czech\tcs\n" +
+                        "Danish\tda\n" +
+                        "Dutch\tnl\n" +
+                        "English\ten\n" +
+                        "Esperanto\teo\n" +
+                        "Estonian\tet\n" +
+                        "Finnish\tfi\n" +
+                        "French\tfr\n" +
+                        "Frisian\tfy\n" +
+                        "Galician\tgl\n" +
+                        "Georgian\tka\n" +
+                        "German\tde\n" +
+                        "Greek\tel\n" +
+                        "Gujarati\tgu\n" +
+                        "Haitian Creole\tht\n" +
+                        "Hausa\tha\n" +
+                        "Hawaiian\thaw\n" +
+                        "Hebrew\tiw\n" +
+                        "Hindi\thi\n" +
+                        "Hmong\thmn\n" +
+                        "Hungarian\thu\n" +
+                        "Icelandic\tis\n" +
+                        "Igbo\tig\n" +
+                        "Indonesian\tid\n" +
+                        "Irish\tga\n" +
+                        "Italian\tit\n" +
+                        "Japanese\tja\n" +
+                        "Javanese\tjw\n" +
+                        "Kannada\tkn\n" +
+                        "Kazakh\tkk\n" +
+                        "Khmer\tkm\n" +
+                        "Korean\tko\n" +
+                        "Kurdish\tku\n" +
+                        "Kyrgyz\tky\n" +
+                        "Lao\tlo\n" +
+                        "Latin\tla\n" +
+                        "Latvian\tlv\n" +
+                        "Lithuanian\tlt\n" +
+                        "Luxembourgish\tlb\n" +
+                        "Macedonian\tmk\n" +
+                        "Malagasy\tmg\n" +
+                        "Malay\tms\n" +
+                        "Malayalam\tml\n" +
+                        "Maltese\tmt\n" +
+                        "Maori\tmi\n" +
+                        "Marathi\tmr\n" +
+                        "Mongolian\tmn\n" +
+                        "Myanmar (Burmese)\tmy\n" +
+                        "Nepali\tne\n" +
+                        "Norwegian\tno\n" +
+                        "Nyanja (Chichewa)\tny\n" +
+                        "Pashto\tps\n" +
+                        "Persian\tfa\n" +
+                        "Polish\tpl\n" +
+                        "Portuguese (Portugal, Brazil)\tpt\n" +
+                        "Punjabi\tpa\n" +
+                        "Romanian\tro\n" +
+                        "Russian\tru\n" +
+                        "Samoan\tsm\n" +
+                        "Scots Gaelic\tgd\n" +
+                        "Serbian\tsr\n" +
+                        "Sesotho\tst\n" +
+                        "Shona\tsn\n" +
+                        "Sindhi\tsd\n" +
+                        "Sinhala (Sinhalese)\tsi\n" +
+                        "Slovak\tsk\n" +
+                        "Slovenian\tsl\n" +
+                        "Somali\tso\n" +
+                        "Spanish\tes\n" +
+                        "Sundanese\tsu\n" +
+                        "Swahili\tsw\n" +
+                        "Swedish\tsv\n" +
+                        "Tagalog (Filipino)\ttl\n" +
+                        "Tajik\ttg\n" +
+                        "Tamil\tta\n" +
+                        "Telugu\tte\n" +
+                        "Thai\tth\n" +
+                        "Turkish\ttr\n" +
+                        "Ukrainian\tuk\n" +
+                        "Urdu\tur\n" +
+                        "Uzbek\tuz\n" +
+                        "Vietnamese\tvi\n" +
+                        "Welsh\tcy\n" +
+                        "Xhosa\txh\n" +
+                        "Yiddish\tyi\n" +
+                        "Yoruba\tyo\n" +
+                        "Zulu\tzu";
+                writeFile(langfile, langList.getBytes());
+            }
+        }
+    }
+
+    public void startApp(){
+        File setting = null, langfile = null;
+
+        //Ask for External Storage Writing Permission
+        if(PermissionUtils.requestPermission(this, WRITE_PERMISSIONS_REQUEST, Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)){
 
             //Make file languageChoice.txt on OurMenu/setting
+            setting = makeDirectory(getExternalPath()+"/OurMenu/setting/");
             langfile = makeFile(setting, getExternalPath()+"/OurMenu/setting/languageChoice.txt");
 
             //write user language choice
