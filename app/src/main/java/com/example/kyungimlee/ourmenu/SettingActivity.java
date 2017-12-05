@@ -30,8 +30,6 @@ import java.util.TreeMap;
 
 import static android.content.ContentValues.TAG;
 
-//import android.widget.Toast;
-
 public class SettingActivity extends AppCompatActivity {
 
     private Spinner select_language;

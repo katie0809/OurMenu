@@ -31,7 +31,6 @@ import android.view.MenuItem;
 import android.view.MotionEvent;
 import android.view.View;
 import android.view.WindowManager;
-import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
 import android.widget.Toast;
@@ -77,8 +76,6 @@ import java.io.FileOutputStream;
 import java.io.FileReader;
 import java.io.FileWriter;
 import java.io.IOException;
-import java.io.ObjectInputStream;
-import java.io.ObjectOutputStream;
 import java.text.SimpleDateFormat;
 import java.util.ArrayList;
 import java.util.Date;
@@ -91,7 +88,6 @@ import java.util.Queue;
 import java.util.StringTokenizer;
 import java.util.TreeMap;
 
-import static java.lang.System.load;
 import static java.lang.System.out;
 
 public class MenuBoardActivity extends AppCompatActivity {
@@ -779,9 +775,9 @@ public class MenuBoardActivity extends AppCompatActivity {
     }
 
     public void callCloudTranslation(final List<String> target) throws IOException{
-        new AsyncTask<Object, Void, List<TranslationsResource>>(){
+        new AsyncTask<Object, Void, List<List<TranslationsResource>>>(){
             @Override
-            protected List<TranslationsResource> doInBackground(Object... objects) {
+            protected List<List<TranslationsResource>> doInBackground(Object... objects) {
                 String result = "";
 
                 HttpTransport httpTransport = AndroidHttp.newCompatibleTransport();
@@ -794,6 +790,8 @@ public class MenuBoardActivity extends AppCompatActivity {
                         .setApplicationName("OurMenu").build();
 
                 List<TranslationsResource> translated_txt = new ArrayList<>();
+                List<TranslationsResource> translated_txt_en = new ArrayList<>();
+                List<List<TranslationsResource> > txts = new ArrayList<>();
 
                 //Do translation for each paragraph
                 try {
@@ -806,42 +804,48 @@ public class MenuBoardActivity extends AppCompatActivity {
                     e.printStackTrace();
                 }
 
-                return translated_txt;
+                //Do translation in English
+                try {
+                    Translate.Translations.List translationreq = translate.translations().list(target, "en");
+                    TranslationsListResponse translationsResponse = translationreq.execute();
+
+                    //save translated text in an array 'translated_txt'
+                    translated_txt_en = translationsResponse.getTranslations();
+                } catch (IOException e) {
+                    e.printStackTrace();
+                }
+
+                txts.add(translated_txt);
+                txts.add(translated_txt_en);
+
+                return txts;
             }
 
             @Override
-            protected void onPostExecute(List<TranslationsResource> res) {
+            protected void onPostExecute(List<List<TranslationsResource>> res) {
 
-                String str = "";
-                for(TranslationsResource resource : res){
+                String str = "", strr="";
+                for(TranslationsResource resource : res.get(0)){
                     str = str + " " + resource.getTranslatedText();
                 }
+                for(TranslationsResource resource : res.get(1)){
+                    strr = strr + " " + resource.getTranslatedText();
+                }
                 //translated_str.setText(str);
-                showCustomDlg(str);
+                showCustomDlg(str, strr);
             }
         }.execute();
     }
 
 
 
-    private void showCustomDlg(String result){
+    private void showCustomDlg(String result, String en_result){
 
-        CustomDialog dialog = new CustomDialog(this,loading_str.getText().toString(), result, detected_lang);
-        dialog.setDialogListener(new MyDialogListener() {  // MyDialogListener 를 구현
-            @Override
-            public void onPositiveClicked(String email, String name) {
-                Log.d("MyDialogListener","onPositiveClicked");
-            }
-            @Override
-            public void onNegativeClicked() {
-                Log.d("MyDialogListener","onNegativeClicked");
-            }
-        });
+        CustomDialog dialog = new CustomDialog(this,loading_str.getText().toString(), result, en_result, detected_lang);
 
         WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
         params.gravity = Gravity.BOTTOM | Gravity.FILL_HORIZONTAL;
         dialog.getWindow().setAttributes(params);
-
         dialog.show();
     }
 

@@ -70,7 +70,6 @@ public class CroppingActivity extends AppCompatActivity {
             Matrix rotateMatrix = new Matrix();
             rotateMatrix.postRotate(90); //-360~360
 
-
             Bitmap sideInversionImg = Bitmap.createBitmap(bitmap, 0, 0,
                     bitmap.getWidth(), bitmap.getHeight(), rotateMatrix, false);
 

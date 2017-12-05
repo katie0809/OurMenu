@@ -37,10 +37,7 @@ import java.util.List;
 
 public class MainActivity extends AppCompatActivity {
 
-    private static final String CLOUD_TRANSLATION_API_KEY = "AIzaSyDON76sNwTcC2AuXU2L_y31z7BtHYP74Ko";
     private static String FILE_NAME = "";
-    private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
-    private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
 
     private static final String TAG = MainActivity.class.getSimpleName();
     private static final int GALLERY_PERMISSIONS_REQUEST = 0;

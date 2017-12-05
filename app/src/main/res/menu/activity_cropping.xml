@@ -7,11 +7,11 @@
         android:title="@string/action_select"
         app:showAsAction="always" />
     <item
-        android:id="@+id/action_crop"
-        android:title="@string/action_crop"
-        app:showAsAction="always" />
-    <item
         android:id="@+id/action_rotate"
         android:title="@string/action_rotate"
+        app:showAsAction="always" />
+    <item
+        android:id="@+id/action_crop"
+        android:title="@string/action_crop"
         app:showAsAction="always" />
 </menu>
