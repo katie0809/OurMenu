@@ -25,4 +25,19 @@
     <string name="err_msg_permission">Permission denied for writing external storage</string>
     <string name="err_msg_nullVertex">OCR error. Some words are not successfully detected. Please resize the picture</string>
     <string name="err_msg_ocr">OCR failed. (1) Maybe there are too many characters in your menu. (2) Try change wifi connection. Some networks deny access to OCR</string>
+
+    <string name="nutrients">Nutrients</string>
+    <string name="flavors">Flavors</string>
+    <string name="bitter">Bitter</string>
+    <string name="meaty">Meaty</string>
+    <string name="piquant">Piquant</string>
+    <string name="salty">Salty</string>
+    <string name="sour">Sour</string>
+    <string name="sweet">Sweet</string>
+    <string name="ingredients">Ingredients</string>
+    <string name="powered_by">Powered By</string>
+    <string name="data_from">Data From</string>
+    <string name="translate_contents">Translate</string>
+    <string name="back_translate_contents">English</string>
+    <color name="background_white">#ffffff</color>
 </resources>

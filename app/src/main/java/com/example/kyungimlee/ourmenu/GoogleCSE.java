@@ -25,7 +25,8 @@ public class GoogleCSE {
     final String CSE_id = "011555106316765250977:p02puvrjndo";
     final String CSE_key = "AIzaSyDamhMfHEKkmPTkAc3mq4FNpqBbr-OtFT4";
 
-    public Bitmap getFoodImageCSE(String foodName){
+    // public Bitmap getFoodImageCSE(String foodName){
+    public ArrayList<String> getFoodImgUrlByCSE(String foodName){
         Bitmap bitmap = null;
         ArrayList<String> foodImgUriList = new ArrayList<String>();
 
@@ -40,10 +41,10 @@ public class GoogleCSE {
             int responseCode = con.getResponseCode();
             BufferedReader br;
             if (responseCode == 200) { // 정상 호출
-                System.out.println("Connection Succeed // CSE");
+                System.out.println("Google CSE Connection Succeed // CSE");
                 br = new BufferedReader(new InputStreamReader(con.getInputStream(), "UTF-8"));
             } else {  // 에러 발생
-                System.out.println("Connection Fail // CSE");
+                System.out.println("Google CSE Connection Fail // CSE");
                 br = new BufferedReader(new InputStreamReader(con.getErrorStream(), "UTF-8"));
             }
             String inputLine;
@@ -67,18 +68,21 @@ public class GoogleCSE {
                 }
             }
 
+            /*
             URL food_img_url = new URL(foodImgUriList.get(0));
             URLConnection food_img_con = food_img_url.openConnection();
             food_img_con.connect();
             BufferedInputStream food_img_stream = new BufferedInputStream(food_img_con.getInputStream());
             bitmap = BitmapFactory.decodeStream(food_img_stream);
             food_img_stream.close();
+            */
 
         } catch (Exception e) {
-            System.out.println("Error Occurred");
+            System.out.println("Google CSE API Error Occurred");
             e.printStackTrace();
         }
 
-        return bitmap;
+        // return bitmap;
+        return foodImgUriList;
     }
 }

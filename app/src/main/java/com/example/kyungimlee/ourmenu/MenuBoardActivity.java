@@ -390,16 +390,6 @@ public class MenuBoardActivity extends AppCompatActivity {
         return;
     }
 
-    /* --------------------------------------
-        Start ResultActivity
-    -------------------------------------- */
-    private void startResultActivity(String str) {
-        Intent i = new Intent(this, ResultActivity.class);
-        i.putExtra("selectedLang", detected_lang);
-        i.putExtra("inputText", str);
-        startActivity(i);
-    }
-
 
     private void isLanguageChosen(){
         //check if an user made language choice
@@ -766,10 +756,6 @@ public class MenuBoardActivity extends AppCompatActivity {
                     }
                     idx++;
                 }
-                String dl = result.get(0).getFullTextAnnotation().getPages().get(0).getProperty().getDetectedLanguages().get(maxidx).getLanguageCode();
-                if(dl.compareTo("en") == 0){
-                    detected_lang = "English";
-                }else detected_lang = "Others";
             }
         }.execute();
     }
@@ -841,7 +827,7 @@ public class MenuBoardActivity extends AppCompatActivity {
 
     private void showCustomDlg(String result, String en_result){
 
-        CustomDialog dialog = new CustomDialog(this,loading_str.getText().toString(), result, en_result, detected_lang);
+        CustomDialog dialog = new CustomDialog(this,loading_str.getText().toString(), result, en_result, choice);
 
         WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
         params.gravity = Gravity.BOTTOM | Gravity.FILL_HORIZONTAL;

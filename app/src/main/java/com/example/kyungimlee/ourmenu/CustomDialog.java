@@ -61,11 +61,11 @@ public class CustomDialog extends Dialog implements View.OnClickListener{
 
     @Override
     public void onClick(View v) {
-        Intent i = new Intent(getContext(), ResultActivity.class);
+        Intent i = new Intent(getContext(), FoodInfoActivity_v1.class);
         // i.putExtra("selectedLang", "Others");
         i.putExtra("selectedLang", detected_lang);
-        i.putExtra("inputText", original_txt);
-        i.putExtra("en_result", en_result_txt);
+        i.putExtra("originText", original_txt);
+        i.putExtra("inputText", en_result_txt);
         getContext().startActivity(i);
     }
 
