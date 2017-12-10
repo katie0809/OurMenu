@@ -121,6 +121,7 @@ public class MainActivity extends AppCompatActivity {
 
         //check if an user already made fixed language choice
         File fixed = new File(getExternalPath()+"/OurMenu/setting/languageFixed.txt");
+
         if(!fixed.exists()){
             //Show loading page
             startActivity(new Intent(this, LoadingActivity.class));

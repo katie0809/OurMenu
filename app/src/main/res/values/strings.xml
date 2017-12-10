@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">OurMenu</string>
+    <string name="app_name">FoodieforAll</string>
     <string name="start_button">Start</string>
     <string name="confirm_button">Confirm</string>
     <string name="checkbox">Do not show language chooser again</string>
