@@ -373,13 +373,13 @@ public class FoodInfoActivity_v1 extends AppCompatActivity {
 
         Fatsercret_Thread.start();
         Yummly_Thread.start();
-        Spoonacular_Thread.start();
+        // Spoonacular_Thread.start();
         CSE_Thread.start();
 
         try {
             Fatsercret_Thread.join();
             Yummly_Thread.join();
-            Spoonacular_Thread.join();
+            // Spoonacular_Thread.join();
             CSE_Thread.join();
         } catch (Exception e) {
             System.out.println("Intent Activity Error Occurred");
