@@ -1,4 +1,4 @@
-package com.example.kyungimlee.ourmenu;
+package com.uos.kyungimlee.ourmenu;
 
 /**
  * Created by kyungimlee on 2017. 12. 6..

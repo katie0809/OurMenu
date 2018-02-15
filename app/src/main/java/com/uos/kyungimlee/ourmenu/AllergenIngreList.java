@@ -1,4 +1,4 @@
-package com.example.kyungimlee.ourmenu;
+package com.uos.kyungimlee.ourmenu;
 
 import java.util.ArrayList;
 

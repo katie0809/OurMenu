@@ -4,7 +4,7 @@
         xmlns:tools="http://schemas.android.com/tools"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        tools:context="com.example.kyungimlee.ourmenu.ResultActivity">
+        tools:context="com.uos.kyungimlee.ourmenu.ResultActivity">
 
     <!--<ScrollView xmlns:android="http://schemas.android.com/apk/res/android"-->
         <!--android:layout_width="match_parent"-->

@@ -1,9 +1,8 @@
-package com.example.kyungimlee.ourmenu;
+package com.uos.kyungimlee.ourmenu;
 
 import android.Manifest;
 import android.annotation.SuppressLint;
 import android.app.ProgressDialog;
-import android.content.Intent;
 import android.content.pm.PackageManager;
 import android.database.Cursor;
 import android.graphics.Bitmap;

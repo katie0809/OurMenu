@@ -1,4 +1,4 @@
-package com.example.kyungimlee.ourmenu;
+package com.uos.kyungimlee.ourmenu;
 
 import android.content.Context;
 import android.support.v4.view.PagerAdapter;
@@ -9,8 +9,6 @@ import android.widget.ImageView;
 
 import com.bumptech.glide.Glide;
 import com.bumptech.glide.request.RequestOptions;
-
-import java.util.ArrayList;
 
 import java.util.ArrayList;
 

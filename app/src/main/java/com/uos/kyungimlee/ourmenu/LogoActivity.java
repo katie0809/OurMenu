@@ -1,12 +1,9 @@
-package com.example.kyungimlee.ourmenu;
+package com.uos.kyungimlee.ourmenu;
 
 import android.content.Intent;
 import android.os.Environment;
-import android.os.Handler;
 import android.support.v7.app.AppCompatActivity;
 import android.os.Bundle;
-
-import java.io.File;
 
 public class LogoActivity extends AppCompatActivity {
 

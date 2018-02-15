@@ -1,4 +1,4 @@
-package com.example.kyungimlee.ourmenu;
+package com.uos.kyungimlee.ourmenu;
 
 import android.content.Context;
 import android.support.test.InstrumentationRegistry;

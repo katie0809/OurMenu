@@ -1,6 +1,6 @@
 <?xml version="1.0" encoding="utf-8"?>
 <manifest xmlns:android="http://schemas.android.com/apk/res/android"
-    package="com.example.kyungimlee.ourmenu">
+    package="com.uos.kyungimlee.ourmenu">
 
     <uses-permission android:name="android.permission.INTERNET" />
     <uses-permission android:name="android.permission.READ_EXTERNAL_STORAGE" />
@@ -16,26 +16,26 @@
         android:supportsRtl="true"
         android:theme="@style/AppTheme">
         <activity
-            android:name=".MainActivity"
+            android:name="com.uos.kyungimlee.ourmenu.MainActivity"
             android:theme="@style/AppTheme_notitle"></activity>
         <activity
-            android:name=".MenuBoardActivity"
+            android:name="com.uos.kyungimlee.ourmenu.MenuBoardActivity"
             android:label="Menu" />
         <activity android:name="com.soundcloud.android.crop.CropImageActivity" />
         <activity
-            android:name=".CroppingActivity"
+            android:name="com.uos.kyungimlee.ourmenu.CroppingActivity"
             android:label="" />
         <activity
-            android:name=".LoadingActivity"
+            android:name="com.uos.kyungimlee.ourmenu.LoadingActivity"
             android:theme="@style/AppTheme_notitle" />
         <activity
-            android:name=".GallaryActivity"
+            android:name="com.uos.kyungimlee.ourmenu.GallaryActivity"
             android:label="Saved Menu" />
         <activity
-            android:name=".SettingActivity"
+            android:name="com.uos.kyungimlee.ourmenu.SettingActivity"
             android:theme="@style/AppTheme_notitle"></activity>
         <activity
-            android:name=".LogoActivity"
+            android:name="com.uos.kyungimlee.ourmenu.LogoActivity"
             android:theme="@style/SplashTheme">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -55,7 +55,7 @@
         </provider>
 
         <activity
-            android:name=".FoodInfoActivity_v1"
+            android:name="com.uos.kyungimlee.ourmenu.FoodInfoActivity_v1"
             android:label="Menu Info"></activity>
     </application>
 
