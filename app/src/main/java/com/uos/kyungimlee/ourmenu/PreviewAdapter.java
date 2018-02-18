@@ -8,6 +8,7 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.TextView;
 
 /**
  * Created by kyungimlee on 2018. 2. 18..
@@ -16,15 +17,17 @@ public class PreviewAdapter extends PagerAdapter {
 
     Context context;
     ImageView img;
+    TextView tv;
     private LayoutInflater inflater;
 
     private final int[] drawableImgs = new int[] {
-            R.drawable.ad,
-            R.drawable.ae,
-            R.drawable.af,
-            R.drawable.ag,
-            R.drawable.ai
+            R.drawable.prv1,
+            R.drawable.prv2,
+            R.drawable.prv4,
+            R.drawable.prv3,
+            R.drawable.prv5
     };
+
 
     PreviewAdapter(Context context, LayoutInflater inflater) {
         this.context = context;
@@ -53,6 +56,7 @@ public class PreviewAdapter extends PagerAdapter {
         if(img.getParent()!=null)
             ((ViewGroup)img.getParent()).removeView(img); // <- fix
         container.addView(img);
+
         return img;
     }
 

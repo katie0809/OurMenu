@@ -1,45 +1,51 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-<string name="app_name">모두의메뉴</string>
-<string name="start_button">시작</string>
-<string name="confirm_button">확인</string>
-<string name="checkbox">아 화면을 다시 보이지 않습니다</string>
-<string name="checkbox_explain">Setting에서 설정사항을 변경할 수 있습니다</string>
+    <string name="app_name">모두의메뉴</string>
+    <string name="start_button">시작</string>
+    <string name="confirm_button">확인</string>
+    <string name="checkbox">이 화면을 다시 보이지 않습니다</string>
+    <string name="checkbox_explain">Setting에서 설정사항을 변경할 수 있습니다</string>
 
-<string name="action_select">재선택</string>
-<string name="action_save">저장하기</string>
-<string name="action_delete">삭제하기</string>
-<string name="action_cancel">취소</string>
-<string name="action_ok">확인</string>
-<string name="action_crop">자르기</string>
-<string name="action_rotate">회전하기</string>
+    <string name="action_select">재선택</string>
+    <string name="action_save">저장하기</string>
+    <string name="action_delete">삭제하기</string>
+    <string name="action_cancel">취소</string>
+    <string name="action_ok">확인</string>
+    <string name="action_crop">자르기</string>
+    <string name="action_rotate">회전하기</string>
 
-<string name="msg_file_save">파일이 저장되었습니다</string>
-<string name="msg_img_load">이미지 로드 완료</string>
-<string name="dialog_select_prompt">이미지를 선택해주세요</string>
-<string name="dialog_select_camera">카메라</string>
-<string name="dialog_select_gallery">갤러리</string>
-<string name="image_picker_error">이미지에 문제가 있습니다. 다른 이미지를 선택해주세요.</string>
+    <string name="msg_file_save">파일이 저장되었습니다</string>
+    <string name="msg_img_load">이미지 로드 완료</string>
+    <string name="dialog_select_prompt">이미지를 선택해주세요</string>
+    <string name="dialog_select_camera">카메라</string>
+    <string name="dialog_select_gallery">갤러리</string>
+    <string name="image_picker_error">이미지에 문제가 있습니다. 다른 이미지를 선택해주세요.</string>
     <string name="dialog_preview_chk">이 화면을 다시 보이지 않습니다</string>
 
-<string name="err_msg_null_file">메뉴 데이터파일이 존재하지 않습니다</string>
-<string name="err_msg_null_lang">언어가 선택되지 않았습니다</string>
-<string name="err_msg_permission">외부저장장치 쓰기 권한이 없습니다</string>
-<string name="err_msg_nullVertex">OCR 에러. 글자들이 제대로 감지되지 않았습니다. 이미지 크기를 줄여 다시 시도해보세요.</string>
-<string name="err_msg_ocr">OCR 실패. (1) 이미지에 너무 많은 글자가 있을 수 있습니다. (2) 네트워크 연결을 바꿔보세요. 일부 네트워크는 OCR 서버연결을 거부합니다</string>
+    <string name="preview_msg1">(1)갤러리 혹은 (2)카메라 메뉴를 선택해 메뉴판을 선택하거나 촬영합니다</string>
+    <string name="preview_msg2">카메라를 활용해 메뉴판을 촬영합니다</string>
+    <string name="preview_msg3">메뉴판을 (1)재선택하거나 (2)회전시킬 수 있습니다.다음으로 (3)메뉴판에서 원하는영역을 택합니다</string>
+    <string name="preview_msg4">(1)메뉴판을 저장할수 있습니다 (2)원하는 메뉴를 선택합니다 (3)다이얼로그의 버튼을 클릭합니다</string>
+    <string name="preview_msg5"></string>
 
-<string name="nutrients">영양정보</string>
-<string name="flavors">맛</string>
-<string name="bitter">쓴맛</string>
-<string name="meaty">풍부한맛</string>
-<string name="piquant">톡쏘는맛</string>
-<string name="salty">짠맛</string>
-<string name="sour">신맛</string>
-<string name="sweet">단맛</string>
-<string name="ingredients">재료</string>
-<string name="powered_by">Powered By</string>
-<string name="data_from">Data From</string>
-<string name="translate_contents">번역하기</string>
-<string name="back_translate_contents">원문보기</string>
-<color name="background_white">#ffffff</color>
+    <string name="err_msg_null_file">메뉴 데이터파일이 존재하지 않습니다</string>
+    <string name="err_msg_null_lang">언어가 선택되지 않았습니다</string>
+    <string name="err_msg_permission">외부저장장치 쓰기 권한이 없습니다</string>
+    <string name="err_msg_nullVertex">OCR 에러. 글자들이 제대로 감지되지 않았습니다. 이미지 크기를 줄여 다시 시도해보세요.</string>
+    <string name="err_msg_ocr">OCR 실패. (1) 이미지에 너무 많은 글자가 있을 수 있습니다. (2) 네트워크 연결을 바꿔보세요. 일부 네트워크는 OCR 서버연결을 거부합니다</string>
+
+    <string name="nutrients">영양정보</string>
+    <string name="flavors">맛</string>
+    <string name="bitter">쓴맛</string>
+    <string name="meaty">풍부한맛</string>
+    <string name="piquant">톡쏘는맛</string>
+    <string name="salty">짠맛</string>
+    <string name="sour">신맛</string>
+    <string name="sweet">단맛</string>
+    <string name="ingredients">재료</string>
+    <string name="powered_by">Powered By</string>
+    <string name="data_from">Data From</string>
+    <string name="translate_contents">번역하기</string>
+    <string name="back_translate_contents">원문보기</string>
+    <color name="background_white">#ffffff</color>
 </resources>

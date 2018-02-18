@@ -109,26 +109,25 @@ public class MainActivity extends AppCompatActivity {
         });
         setting_btn.setOnClickListener(new View.OnClickListener() {
             @Override
-            public void onClick(View view) {
-                //startSetting();
-
-               showCustomDlg();
-
-            }
+            public void onClick(View view) {startSetting();}
         });
 
         //check if an user already made fixed language choice
         File fixed = new File(getExternalPath()+"/OurMenu/setting/languageFixed.txt");
+        File tutorial = new File(getExternalPath() + "/OurMenu/setting/tutorialNo.txt");
 
         if(!fixed.exists()){
             //Show loading page
             startActivity(new Intent(this, LoadingActivity.class));
         }
+        if(!tutorial.exists()){
+            showCustomDlg();
+        }
 
     }
     private void showCustomDlg(){
 
-        PreviewDialog dialog = new PreviewDialog(this);
+        PreviewDialog dialog = new PreviewDialog(this, getExternalPath());
 
         WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
         params.gravity = Gravity.CENTER | Gravity.FILL_HORIZONTAL;
