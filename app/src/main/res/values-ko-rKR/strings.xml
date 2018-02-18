@@ -20,6 +20,7 @@
 <string name="dialog_select_camera">카메라</string>
 <string name="dialog_select_gallery">갤러리</string>
 <string name="image_picker_error">이미지에 문제가 있습니다. 다른 이미지를 선택해주세요.</string>
+    <string name="dialog_preview_chk">이 화면을 다시 보이지 않습니다</string>
 
 <string name="err_msg_null_file">메뉴 데이터파일이 존재하지 않습니다</string>
 <string name="err_msg_null_lang">언어가 선택되지 않았습니다</string>

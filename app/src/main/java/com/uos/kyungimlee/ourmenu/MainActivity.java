@@ -14,7 +14,9 @@ import android.support.v4.content.FileProvider;
 import android.support.v7.app.AppCompatActivity;
 import android.telephony.TelephonyManager;
 import android.util.Log;
+import android.view.Gravity;
 import android.view.View;
+import android.view.WindowManager;
 import android.widget.Button;
 import android.widget.ImageView;
 import android.widget.TextView;
@@ -108,7 +110,10 @@ public class MainActivity extends AppCompatActivity {
         setting_btn.setOnClickListener(new View.OnClickListener() {
             @Override
             public void onClick(View view) {
-                startSetting();
+                //startSetting();
+
+               showCustomDlg();
+
             }
         });
 
@@ -120,6 +125,15 @@ public class MainActivity extends AppCompatActivity {
             startActivity(new Intent(this, LoadingActivity.class));
         }
 
+    }
+    private void showCustomDlg(){
+
+        PreviewDialog dialog = new PreviewDialog(this);
+
+        WindowManager.LayoutParams params = dialog.getWindow().getAttributes();
+        params.gravity = Gravity.CENTER | Gravity.FILL_HORIZONTAL;
+        dialog.getWindow().setAttributes(params);
+        dialog.show();
     }
 
     private void startSetting() {

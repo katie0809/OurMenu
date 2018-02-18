@@ -18,6 +18,7 @@
     <string name="dialog_select_prompt">Choose a picture</string>
     <string name="dialog_select_camera">Camera</string>
     <string name="dialog_select_gallery">Gallery</string>
+    <string name="dialog_preview_chk">Do not show this tutorial again</string>
     <string name="image_picker_error">Something is wrong with that image. Pick a different one please.</string>
 
     <string name="err_msg_null_file">No datafile found</string>
