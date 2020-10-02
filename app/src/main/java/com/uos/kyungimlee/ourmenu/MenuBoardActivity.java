@@ -91,7 +91,7 @@ import static java.lang.System.out;
 
 public class MenuBoardActivity extends AppCompatActivity {
 
-    private static final String API_KEY = "AIzaSyDON76sNwTcC2AuXU2L_y31z7BtHYP74Ko";
+    private static final String API_KEY = "AIzaSyBD-YRxOH7to3og8KMksGaHekRTGbE_ek4";
     private static final String ANDROID_CERT_HEADER = "X-Android-Cert";
     private static final String ANDROID_PACKAGE_HEADER = "X-Android-Package";
     public static final int WRITE_PERMISSIONS_REQUEST = 4;
